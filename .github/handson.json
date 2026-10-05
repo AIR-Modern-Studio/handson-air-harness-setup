@@ -1,0 +1,14 @@
+{
+  "exercise_title": "AI/R Harness Setup — Configurando um Outer Harness na prática",
+  "code_dir": "projeto",
+  "spine_sections": [
+    "Project",
+    "Commands",
+    "Style",
+    "Testing",
+    "Architecture",
+    "Etiquette",
+    "Security",
+    "Gotchas"
+  ]
+}

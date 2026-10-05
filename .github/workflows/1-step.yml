@@ -1,0 +1,115 @@
+name: Passo 1
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**/harness/MANIFEST.json'
+
+permissions:
+  contents: read
+  actions: write
+  issues: write
+
+jobs:
+  find_exercise:
+    name: Encontrar a issue do exercício
+    uses: skills/exercise-toolkit/.github/workflows/find-exercise-issue.yml@v0.9.3
+
+  check_step_work:
+    name: Verificar o trabalho do passo
+    needs: [find_exercise]
+    runs-on: ubuntu-latest
+    outputs:
+      vars: ${{ steps.check.outputs.vars }}
+    env:
+      ISSUE_REPOSITORY: ${{ github.repository }}
+      ISSUE_NUMBER: ${{ needs.find_exercise.outputs.issue-number }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Encontrar o último comentário
+        id: find-last-comment
+        uses: peter-evans/find-comment@v4
+        with:
+          repository: ${{ env.ISSUE_REPOSITORY }}
+          issue-number: ${{ env.ISSUE_NUMBER }}
+          direction: last
+
+      - name: Comentário - verificando
+        uses: GrantBirki/comment@v2.1.1
+        with:
+          repository: ${{ env.ISSUE_REPOSITORY }}
+          issue-number: ${{ env.ISSUE_NUMBER }}
+          comment-id: ${{ steps.find-last-comment.outputs.comment-id }}
+          file: .github/translations/checking-work.md
+          edit-mode: replace
+
+      - name: Verificar o passo 1
+        id: check
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
+        run: python3 .github/scripts/check_step.py 1
+
+      - name: Comentário - resultado do passo
+        uses: GrantBirki/comment@v2.1.1
+        with:
+          repository: ${{ env.ISSUE_REPOSITORY }}
+          issue-number: ${{ env.ISSUE_NUMBER }}
+          comment-id: ${{ steps.find-last-comment.outputs.comment-id }}
+          edit-mode: replace
+          file: .github/translations/step-results-table.md
+          vars: ${{ steps.check.outputs.vars }}
+
+      - name: Falhar se alguma verificação não passou
+        if: steps.check.outputs.passed != 'true'
+        run: exit 1
+
+  post_next_step_content:
+    name: Postar o próximo passo
+    needs: [find_exercise, check_step_work]
+    runs-on: ubuntu-latest
+    env:
+      ISSUE_REPOSITORY: ${{ github.repository }}
+      ISSUE_NUMBER: ${{ needs.find_exercise.outputs.issue-number }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Comentário - passo concluído
+        uses: GrantBirki/comment@v2.1.1
+        with:
+          repository: ${{ env.ISSUE_REPOSITORY }}
+          issue-number: ${{ env.ISSUE_NUMBER }}
+          file: .github/translations/step-finished-prepare-next-step.md
+          vars: |
+            next_step_number: 2
+
+      - name: Comentário - conteúdo do passo 2
+        uses: GrantBirki/comment@v2.1.1
+        with:
+          repository: ${{ env.ISSUE_REPOSITORY }}
+          issue-number: ${{ env.ISSUE_NUMBER }}
+          file: .github/steps/2-step.md
+          vars: ${{ needs.check_step_work.outputs.vars }}
+
+      - name: Comentário - acompanhando
+        uses: GrantBirki/comment@v2.1.1
+        with:
+          repository: ${{ env.ISSUE_REPOSITORY }}
+          issue-number: ${{ env.ISSUE_NUMBER }}
+          file: .github/translations/watching-for-progress.md
+
+      - name: Desabilitar este passo e habilitar o próximo
+        run: |
+          gh workflow disable "${{ github.workflow }}"
+          gh workflow enable "Passo 2"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
