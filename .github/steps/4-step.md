@@ -1,39 +1,56 @@
-## Passo 4: Usar o harness e fechar o loop
+## Passo 4: Rules sob medida
 
-O harness está instalado. Agora você trabalha no projeto como num dia normal e observa o agente seguindo o que vocês escreveram. Quando ele errar, ou deixar passar uma convenção, o ajuste vai **no documento**, não só no código. É assim que o harness melhora com o uso.
+O `AGENTS.md` vale para o projeto inteiro. As **rules** valem para uma parte dele e só entram em cena quando o assunto aparece, o que mantém a espinha enxuta. São a parte mais específica do harness: o pacote não traz rule pronta, só a forma e um exemplo fictício que a skill usa como referência para escrever as suas.
 
-### 📖 O loop de feedback
+**Objetivo deste passo:** gravar pelo menos uma rule `air-*`, de área ou playbook. Na skill, zero rules também é uma decisão válida; para o exercício avançar, a verificação procura pelo menos uma.
 
-- O agente erra uma vez → você corrige o código **e** pergunta: "que linha do `AGENTS.md` ou de qual rule teria evitado isso?"
-- Se a resposta é "nenhuma", falta uma linha. Se existe uma linha e ele não seguiu, ela está ambígua ou no lugar errado.
-- O guia "Mexer num documento já instalado", na página do Outer Harness, mostra para onde vai cada tipo de achado.
+### 📖 Duas famílias de rules
 
-### ⌨️ Atividade: Uma tarefa no projeto
+| | Rule de área | Playbook |
+| --- | --- | --- |
+| O que é | Uma convenção para uma parte do código | Um procedimento com ordem, para um tipo de tarefa |
+| Quando entra | Sozinha, quando você trabalha nos caminhos dela | Quando você invoca, de propósito |
+| Exemplo | Acesso a dados: limite da transação, o que nunca vai para log | Hotfix: o que fazer primeiro, que verificações manter mesmo com pressa |
 
-1. Abra o {{ agent_label | default("seu agente", true) }} **dentro de `{{ code_dir }}/`**. Esta é uma sessão de trabalho normal, não de instalação.
+A pergunta que separa as duas é **o que faz a rule carregar**. Se é "sempre que alguém mexer nestes caminhos", é rule de área. Se é "quando estivermos fazendo este trabalho", com passos numa ordem que importa, é playbook. Tem passos mas a ordem não importa? É rule de área. Tem ordem mas vale para todo arquivo? Divida.
 
-1. Peça ao agente a tarefa abaixo:
+### 📖 Rules no {{ agent_label }}
 
-   <!-- TODO(projeto-base): descrever a tarefa do hands-on quando o projeto-base estiver definido. -->
+| Tipo | Onde fica | Como chega ao agente |
+| --- | --- | --- |
+| Rule de área | `{{ rule_area_path | safe }}` | {{ rule_area_load | safe }} |
+| Playbook | `{{ rule_task_path | safe }}` | {{ rule_task_load | safe }} |
 
-   ```text
-   <tarefa do hands-on>
-   ```
+`<nome>` é o assunto da rule, em minúsculas e com hífens, sem o prefixo `air-`. No playbook é também o que você digita para invocá-lo, então vale ser curto e fácil de adivinhar.
 
-1. Observe a resposta: o agente citou ou seguiu algo do `AGENTS.md` ou da rule que você aprovou? Revise o código gerado.
+### 📖 Como a skill propõe
 
-### ⌨️ Atividade: Ajustar o harness
+- **Do projeto, não de uma lista.** Cada candidata nasce de um sinal que a skill viu no projeto ou ouviu na entrevista: uma camada que chega ao dado, um contrato público, dinheiro que precisa fechar, dado pessoal, um passo que o time erra sob pressão, "a coisa que sempre quebra". Sem sinal, sem rule.
+- **Primeiro a proposta, depois o rascunho.** Cada candidata chega em poucas linhas: o que cobre, por que cabe aqui (com o sinal nomeado), quão crítica é e quanto custa em contexto a cada sessão. O rascunho só é gerado se você quiser a rule.
+- **O que o time já tem fica.** Se já existe uma rule parecida, a skill não mexe nela nem cria uma gêmea: diz se ela basta, que linha acrescentaria ou onde há sobreposição, e você decide.
 
-1. Escolha **um** ponto em que o agente errou, hesitou ou fez diferente do que o time faria.
+### 📖 O que olhar no rascunho
 
-1. Ajuste o documento que deveria ter evitado isso: o `{{ code_dir }}/AGENTS.md` ou uma rule `air-*` que já existe. Pode pedir ao agente para propor a mudança, mas você decide o texto.
+- **Uma área só, em frases que o agente consegue seguir.** Rule que passa de umas 40 linhas, ou que vira procedimento, é sinal de que deveria ser playbook.
+- **O escopo.** {{ scope_hint | safe }}
+- **Nenhum `<...>` sobrando.** Campo do template sem preencher no escopo é um glob que não casa com nada.
 
-1. Faça **um único push** com a tarefa e o ajuste no documento:
+### ⌨️ Atividade: Aprovar ao menos uma rule
+
+1. Continue a instalação, na mesma sessão ou numa nova. Numa sessão nova, abra o agente na pasta-mãe e envie a primeira linha do gatilho do Passo 2.
+
+1. Para cada candidata, leia a proposta e decida se quer o rascunho. Recusar já na proposta também é decisão, e fica registrada com o motivo.
+
+1. Nas rules que quiser, leia o rascunho, confira o escopo e o nome, peça ajustes e aprove. Escolha **pelo menos uma**.
+
+1. Quando a skill passar para a espinha revisada e a verificação, avise que vai parar por aqui: o fechamento fica para o Passo 5. Confira que o andamento ficou registrado em `{{ package_dir }}/runs/{{ code_dir }}/STATE.md`.
+
+1. Faça o commit na `main`, incluindo `runs/`, e envie (push):
 
    ```bash
    git add .
-   git commit -m "Passo 4: tarefa + ajuste no harness"
+   git commit -m "Passo 4: rules"
    git push
    ```
 
-1. Aguarde a revisão final nesta issue.
+1. Aguarde a verificação nesta issue.

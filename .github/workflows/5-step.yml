@@ -1,15 +1,11 @@
-name: Passo 4
+name: Passo 5
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'projeto/.claude/**'
-      - 'projeto/.kiro/**'
-      - 'projeto/.github/instructions/**'
-      - 'projeto/.github/prompts/**'
-      - 'projeto/.aicockpit/**'
+      - '**/runs/**/STATE.md'
 
 permissions:
   contents: read
@@ -56,12 +52,12 @@ jobs:
           file: .github/translations/checking-work.md
           edit-mode: replace
 
-      - name: Verificar o passo 4
+      - name: Verificar o passo 5
         id: check
         env:
           BEFORE_SHA: ${{ github.event.before }}
           AFTER_SHA: ${{ github.sha }}
-        run: python3 .github/scripts/check_step.py 4
+        run: python3 .github/scripts/check_step.py 5
 
       - name: Comentário - resultado do passo
         uses: GrantBirki/comment@v2.1.1
@@ -96,14 +92,14 @@ jobs:
           issue-number: ${{ env.ISSUE_NUMBER }}
           file: .github/translations/step-finished-prepare-next-step.md
           vars: |
-            next_step_number: 5
+            next_step_number: 6
 
-      - name: Comentário - conteúdo do passo 5
+      - name: Comentário - conteúdo do passo 6
         uses: GrantBirki/comment@v2.1.1
         with:
           repository: ${{ env.ISSUE_REPOSITORY }}
           issue-number: ${{ env.ISSUE_NUMBER }}
-          file: .github/steps/5-step.md
+          file: .github/steps/6-step.md
           vars: ${{ needs.check_step_work.outputs.vars }}
 
       - name: Comentário - acompanhando
@@ -116,6 +112,6 @@ jobs:
       - name: Desabilitar este passo e habilitar o próximo
         run: |
           gh workflow disable "${{ github.workflow }}"
-          gh workflow enable "Passo 5"
+          gh workflow enable "Passo 6"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

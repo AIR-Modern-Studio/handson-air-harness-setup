@@ -1,44 +1,42 @@
-## Passo 3: Rules sob medida
+## Passo 3: Os demais documentos
 
-O `AGENTS.md` vale para o projeto inteiro. As **rules** valem para uma parte dele: uma área do código (por exemplo, acesso a dados) ou um tipo de tarefa (por exemplo, hotfix). Elas carregam só quando o assunto aparece, o que mantém a espinha enxuta.
+A espinha está gravada. Agora a skill passa pelos outros documentos do harness, um de cada vez. Cada um cobre uma parte que a espinha só aponta: o que bloquearia uma mudança, como o review julga, o mapa da arquitetura.
 
-### 📖 Rules no {{ agent_label }}
+**Objetivo deste passo:** passar por cada documento que a skill propuser e decidir: aprovar, ajustar ou dispensar. A verificação confere que as suas decisões ficaram registradas em `{{ package_dir }}/runs/{{ code_dir }}/DECISIONS.md`.
 
-A skill propõe **rules candidatas** a partir do que encontrou no projeto. Você escolhe quais quer e valida **uma a uma**. Nenhuma rule do pacote é gravada direto: os exemplos do pacote servem de forma, e o texto é escrito para o seu projeto.
+### 📖 Os documentos no {{ agent_label }}
 
-| Tipo | Onde fica no {{ agent_label }} |
-| --- | --- |
-{%- if agent == "claude-code" %}
-| Área do código | `{{ code_dir }}/.claude/rules/air-*.md`, com `paths:` no frontmatter |
-| Tipo de tarefa | `{{ code_dir }}/.claude/commands/air-*.md`, acionado com `/air-<nome>` |
-{%- elif agent == "kiro" %}
-| Área do código | `{{ code_dir }}/.kiro/steering/air-*.md`, com `inclusion: fileMatch` |
-| Tipo de tarefa | `{{ code_dir }}/.kiro/steering/air-*.md`, com `inclusion: manual`, acionado com `#air-<nome>` |
-{%- elif agent == "github-copilot" %}
-| Área do código | `{{ code_dir }}/.github/instructions/air-*.instructions.md`, com `applyTo:` |
-| Tipo de tarefa | `{{ code_dir }}/.github/prompts/air-*.prompt.md` |
-{%- elif agent == "ai-cockpit-reasoning" %}
-| Área do código | `{{ code_dir }}/.aicockpit/rules/air-*.md` |
-| Tipo de tarefa | `{{ code_dir }}/.aicockpit/workflows/air-*.md` |
-{%- endif %}
+| Documento | Para que serve | Onde fica |
+| --- | --- | --- |
+| Constitution | As poucas regras que bloqueariam uma mudança neste projeto. Vem do que o time diz: o que já causou incidente, o que um regulador ou contrato obriga. | `{{ doc_constitution }}` |
+| Contrato de review | O que o review considera importante aqui e o que ele confere em toda mudança. | `{{ doc_review_contract }}` |
+| Calibração do review | A régua do revisor automatizado: o que ele pode aprovar sozinho, o que só reporta e o que bloqueia. | `{{ doc_review_examples }}` |
+| Arquitetura | Um mapa de alto nível: camadas, direção das dependências e decisões-chave. | `{{ doc_architecture }}` |
+| Template de PR | O formato que pré-preenche todo pull request, de pessoa ou de agente. | `{{ doc_pr_template }}` no GitHub; o lugar muda conforme a forja |
+| Índice da documentação | Uma linha por documento do projeto: o que é e quando ler. | `{{ doc_docs_index }}` |
 
-### ⌨️ Atividade: Aprovar ao menos uma rule
+- **Um por vez, na ordem que fizer sentido para o projeto.** Cada documento segue o caminho do `AGENTS.md`: rascunho em `{{ package_dir }}/runs/{{ code_dir }}/draft/`, você lê no editor, pede ajustes e decide.
+- **A constitution começa com perguntas.** Ela é escrita com o que você disser, nunca com uma lista trazida de fora: o que já causou incidente aqui? O que faria você recusar uma entrega?
+- **O que o projeto já tem prevalece.** Se já existe um documento equivalente, a skill mostra o que encontrou e não o substitui.
+- **Sem base, sem documento.** Se um documento sairia só com o esqueleto, a skill pergunta antes de gerar. Sem forja (GitHub, GitLab…), não há template de PR. Sem CI, o review não fala do que o CI garante.
 
-1. Volte à sessão de instalação do Passo 2. Se ela foi fechada, abra o agente de novo na pasta-mãe e envie o mesmo gatilho: a skill retoma de onde parou.
+### ⌨️ Atividade: Decidir os documentos
 
-1. A skill vai oferecer os demais documentos, um a um. Valide, ajuste ou dispense cada um. Dispensar também é uma decisão, e fica registrada com o motivo em `runs/<projeto>/DECISIONS.md`.
+1. Continue a instalação. Pode ser na mesma sessão do Passo 2 ou numa nova; uma sessão nova começa com o contexto limpo, o que ajuda se a conversa já ficou longa. Numa sessão nova, abra o agente na pasta-mãe e envie a primeira linha do gatilho do Passo 2: a skill lê o registro em `{{ package_dir }}/runs/{{ code_dir }}/` e retoma de onde parou.
 
-1. Quando chegarem as **rules candidatas**, escolha **pelo menos uma** que faça sentido para o projeto. Leia o rascunho, ajuste o escopo se precisar e aprove.
+1. Para cada documento que a skill apresentar, leia o resumo e as perguntas em aberto, abra o rascunho no editor e decida: aprove, peça ajustes ou dispense.
 
-1. Ao final, a skill faz a verificação da instalação. Leia o resumo.
+   > ❕ **Importante:** nenhum destes documentos é obrigatório. Dispensar é uma decisão, não uma falha, e fica registrada com o motivo em `DECISIONS.md`.
 
-   > ❕ **Importante:** se você quiser incluir algo além do proposto (um servidor MCP, por exemplo), peça **agora**, durante a sessão de instalação. A skill não fica no projeto depois.
+1. Quando a skill chegar às **rules candidatas**, avise que vai parar por aqui: as rules ficam para o Passo 4. Confira que o andamento ficou registrado em `{{ package_dir }}/runs/{{ code_dir }}/STATE.md`.
 
-1. Faça o commit na `main`, incluindo `runs/`, e envie (push):
+1. Confira o que foi gravado em `{{ code_dir }}/`.
+
+1. Faça o commit na `main`, **incluindo a pasta `runs/` do pacote**, e envie (push):
 
    ```bash
    git add .
-   git commit -m "Passo 3: rules"
+   git commit -m "Passo 3: documentos"
    git push
    ```
 
