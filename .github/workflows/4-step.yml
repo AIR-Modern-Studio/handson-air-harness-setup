@@ -18,6 +18,8 @@ permissions:
 
 jobs:
   find_exercise:
+    if: |
+      !github.event.repository.is_template
     name: Encontrar a issue do exercício
     uses: skills/exercise-toolkit/.github/workflows/find-exercise-issue.yml@v0.9.3
     with:

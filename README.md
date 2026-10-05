@@ -1,6 +1,6 @@
-# AI/R Harness Setup — Configurando um Outer Harness na prática
+# AI/R Harness Setup
 
-<img src="https://octodex.github.com/images/Professortocat_v2.png" align="right" height="200px" />
+_Configurando um Outer Harness na prática._
 
 O agente de código começa cada conversa sabendo só o que os documentos do projeto dizem a ele. Se ninguém escreveu os comandos, as convenções e o que não se pode tocar, ele adivinha, e você corrige o mesmo erro na semana seguinte.
 
