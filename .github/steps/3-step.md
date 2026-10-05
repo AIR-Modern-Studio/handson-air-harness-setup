@@ -8,23 +8,12 @@ A skill propõe **rules candidatas** a partir do que encontrou no projeto. Você
 
 | Tipo | Onde fica no {{ agent_label }} |
 | --- | --- |
-{%- if agent == "claude-code" %}
-| Área do código | `{{ code_dir }}/.claude/rules/air-*.md`, com `paths:` no frontmatter |
-| Tipo de tarefa | `{{ code_dir }}/.claude/commands/air-*.md`, acionado com `/air-<nome>` |
-{%- elif agent == "kiro" %}
-| Área do código | `{{ code_dir }}/.kiro/steering/air-*.md`, com `inclusion: fileMatch` |
-| Tipo de tarefa | `{{ code_dir }}/.kiro/steering/air-*.md`, com `inclusion: manual`, acionado com `#air-<nome>` |
-{%- elif agent == "github-copilot" %}
-| Área do código | `{{ code_dir }}/.github/instructions/air-*.instructions.md`, com `applyTo:` |
-| Tipo de tarefa | `{{ code_dir }}/.github/prompts/air-*.prompt.md` |
-{%- elif agent == "ai-cockpit-reasoning" %}
-| Área do código | `{{ code_dir }}/.aicockpit/rules/air-*.md` |
-| Tipo de tarefa | `{{ code_dir }}/.aicockpit/workflows/air-*.md` |
-{%- endif %}
+| Área do código | {{ rule_area | safe }} |
+| Tipo de tarefa | {{ rule_task | safe }} |
 
 ### ⌨️ Atividade: Aprovar ao menos uma rule
 
-1. Volte à sessão de instalação do Passo 2. Se ela foi fechada, abra o agente de novo na pasta-mãe e envie o mesmo gatilho: a skill retoma de onde parou.
+1. Continue a instalação. Pode ser na mesma sessão do Passo 2 ou numa nova; uma sessão nova começa com o contexto limpo, o que ajuda se a conversa já ficou longa. Numa sessão nova, abra o agente na pasta-mãe e envie a primeira linha do gatilho do Passo 2: a skill lê o registro em `{{ package_dir }}/runs/{{ code_dir }}/` e retoma de onde parou.
 
 1. A skill vai oferecer os demais documentos, um a um. Valide, ajuste ou dispense cada um. Dispensar também é uma decisão, e fica registrada com o motivo em `runs/<projeto>/DECISIONS.md`.
 

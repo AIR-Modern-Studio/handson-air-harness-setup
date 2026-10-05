@@ -9,7 +9,8 @@ harness/MANIFEST.json e confere o trabalho do passo.
 
 Escreve em $GITHUB_OUTPUT:
   vars    YAML com step_number, results_table, tips, agent, agent_label,
-          lang, package_dir, code_dir (usado pelos templates de comentário)
+          lang, package_dir, code_dir, open_hint, pointer_note, rule_area,
+          rule_task (usado pelos templates de comentário)
   passed  "true" | "false"
 """
 from __future__ import annotations
@@ -26,7 +27,9 @@ CONFIG = json.loads((ROOT / ".github" / "handson.json").read_text(encoding="utf-
 CODE_DIR = CONFIG["code_dir"]
 CODE = ROOT / CODE_DIR
 
-# Onde cada agente guarda o que a skill escreve no projeto.
+# Onde cada agente guarda o que a skill escreve no projeto, e os textos por
+# agente que os templates de .github/steps/ usam (open_hint, rule_area,
+# rule_task; {code} vira CODE_DIR).
 AGENTS = {
     "claude-code": {
         "label": "Claude Code",
@@ -34,6 +37,9 @@ AGENTS = {
         "rule_globs": [".claude/rules/air-*.md"],
         "task_globs": [".claude/commands/air-*.md", ".claude/skills/air-*/SKILL.md"],
         "scope_key": "paths:",
+        "open_hint": "Abra um terminal na raiz do repositório (a pasta-mãe) e inicie o Claude Code com `claude`.",
+        "rule_area": "`{code}/.claude/rules/air-*.md`, com `paths:` no frontmatter",
+        "rule_task": "`{code}/.claude/commands/air-*.md`, acionado com `/air-<nome>`",
     },
     "kiro": {
         "label": "Kiro",
@@ -41,6 +47,10 @@ AGENTS = {
         "rule_globs": [".kiro/steering/air-*.md"],
         "task_globs": [],  # task-type no Kiro = steering com inclusion: manual
         "scope_key": "inclusion:",
+        "open_hint": "No Kiro, abra a **pasta-mãe** (raiz do repositório) com **File → Open Folder**. "
+                     "Se preferir a CLI, abra o terminal na pasta-mãe e inicie o Kiro CLI.",
+        "rule_area": "`{code}/.kiro/steering/air-*.md`, com `inclusion: fileMatch`",
+        "rule_task": "`{code}/.kiro/steering/air-*.md`, com `inclusion: manual`, acionado com `#air-<nome>`",
     },
     "github-copilot": {
         "label": "GitHub Copilot",
@@ -48,6 +58,10 @@ AGENTS = {
         "rule_globs": [".github/instructions/air-*.instructions.md"],
         "task_globs": [".github/prompts/air-*.prompt.md"],
         "scope_key": "applyTo:",
+        "open_hint": "No VS Code, abra a **pasta-mãe** (raiz do repositório) com **File → Open Folder**. "
+                     "Depois abra o Copilot Chat e selecione o modo **Agent**.",
+        "rule_area": "`{code}/.github/instructions/air-*.instructions.md`, com `applyTo:`",
+        "rule_task": "`{code}/.github/prompts/air-*.prompt.md`",
     },
     "ai-cockpit-reasoning": {
         "label": "AI/C Reasoning",
@@ -55,6 +69,10 @@ AGENTS = {
         "rule_globs": [".aicockpit/rules/air-*.md"],
         "task_globs": [".aicockpit/workflows/air-*.md"],
         "scope_key": None,
+        "open_hint": "No VS Code, abra a **pasta-mãe** (raiz do repositório) com **File → Open Folder**. "
+                     "Depois abra o painel do AI/C Reasoning e inicie uma conversa nova.",
+        "rule_area": "`{code}/.aicockpit/rules/air-*.md`",
+        "rule_task": "`{code}/.aicockpit/workflows/air-*.md`",
     },
 }
 
@@ -318,6 +336,8 @@ def main() -> int:
     {1: step1, 2: step2, 3: step3, 4: step4}[step](info, results, tips)
 
     spec = AGENTS.get(info["agent"] or "", {})
+    pointer_note = (f"No {spec['label']}, o `AGENTS.md` vem acompanhado de `{CODE_DIR}/{spec['pointer']}`, "
+                    "o arquivo que faz o agente lê-lo." if spec.get("pointer") else "")
     payload = {
         "step_number": step,
         "results_table": results,
@@ -327,6 +347,10 @@ def main() -> int:
         "lang": info["lang"] or "",
         "package_dir": rel(info["package_dir"]),
         "code_dir": CODE_DIR,
+        "open_hint": spec.get("open_hint", "Abra o seu agente na **pasta-mãe** (raiz do repositório)."),
+        "pointer_note": pointer_note,
+        "rule_area": spec.get("rule_area", "").format(code=CODE_DIR),
+        "rule_task": spec.get("rule_task", "").format(code=CODE_DIR),
     }
     passed = all(r["passed"] for r in results)
     out = os.environ.get("GITHUB_OUTPUT")
