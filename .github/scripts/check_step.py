@@ -9,8 +9,11 @@ harness/MANIFEST.json e confere o trabalho do passo.
 
 Escreve em $GITHUB_OUTPUT:
   vars    YAML com step_number, results_table, tips, agent, agent_label,
-          lang, package_dir, code_dir, open_hint, pointer_note, rule_area,
-          rule_task (usado pelos templates de comentário)
+          lang, package_dir, code_dir, open_hint, pointer_note,
+          doc_constitution, doc_review_contract, doc_review_examples,
+          doc_architecture, doc_pr_template, doc_docs_index, rule_area_path,
+          rule_area_load, rule_task_path, rule_task_load, scope_hint,
+          spine_reach, verify_scope (usado pelos templates de comentário)
   passed  "true" | "false"
 """
 from __future__ import annotations
@@ -28,8 +31,9 @@ CODE_DIR = CONFIG["code_dir"]
 CODE = ROOT / CODE_DIR
 
 # Onde cada agente guarda o que a skill escreve no projeto, e os textos por
-# agente que os templates de .github/steps/ usam (open_hint, rule_area,
-# rule_task; {code} vira CODE_DIR).
+# agente que os templates de .github/steps/ usam (open_hint, rule_area_load,
+# rule_task_load, scope_hint). scope_glob_key é a chave do frontmatter com os
+# globs de escopo de uma rule de área.
 AGENTS = {
     "claude-code": {
         "label": "Claude Code",
@@ -38,8 +42,11 @@ AGENTS = {
         "task_globs": [".claude/commands/air-*.md", ".claude/skills/air-*/SKILL.md"],
         "scope_key": "paths:",
         "open_hint": "Abra um terminal na raiz do repositório (a pasta-mãe) e inicie o Claude Code com `claude`.",
-        "rule_area": "`{code}/.claude/rules/air-*.md`, com `paths:` no frontmatter",
-        "rule_task": "`{code}/.claude/commands/air-*.md`, acionado com `/air-<nome>`",
+        "scope_glob_key": "paths",
+        "rule_area_load": "Carrega sozinha quando você trabalha nos caminhos do `paths:` do frontmatter",
+        "rule_task_load": "Você invoca: `/air-<nome>`",
+        "scope_hint": "Confira o `paths:` do frontmatter: ele precisa casar com arquivos que existem no projeto. "
+                      "Um glob que não casa com nada é uma rule que nunca carrega, e ela falha em silêncio.",
     },
     "kiro": {
         "label": "Kiro",
@@ -49,8 +56,11 @@ AGENTS = {
         "scope_key": "inclusion:",
         "open_hint": "No Kiro, abra a **pasta-mãe** (raiz do repositório) com **File → Open Folder**. "
                      "Se preferir a CLI, abra o terminal na pasta-mãe e inicie o Kiro CLI.",
-        "rule_area": "`{code}/.kiro/steering/air-*.md`, com `inclusion: fileMatch`",
-        "rule_task": "`{code}/.kiro/steering/air-*.md`, com `inclusion: manual`, acionado com `#air-<nome>`",
+        "scope_glob_key": "fileMatchPattern",
+        "rule_area_load": "Carrega sozinha quando você trabalha nos caminhos do `fileMatchPattern:` (`inclusion: fileMatch`)",
+        "rule_task_load": "Com `inclusion: manual`, você invoca: `#air-<nome>`",
+        "scope_hint": "Confira o `fileMatchPattern:` do frontmatter: ele precisa casar com arquivos que existem no projeto. "
+                      "Um glob que não casa com nada é uma rule que nunca carrega, e ela falha em silêncio.",
     },
     "github-copilot": {
         "label": "GitHub Copilot",
@@ -60,8 +70,11 @@ AGENTS = {
         "scope_key": "applyTo:",
         "open_hint": "No VS Code, abra a **pasta-mãe** (raiz do repositório) com **File → Open Folder**. "
                      "Depois abra o Copilot Chat e selecione o modo **Agent**.",
-        "rule_area": "`{code}/.github/instructions/air-*.instructions.md`, com `applyTo:`",
-        "rule_task": "`{code}/.github/prompts/air-*.prompt.md`",
+        "scope_glob_key": "applyTo",
+        "rule_area_load": "Carrega sozinha quando você trabalha nos caminhos do `applyTo:` do frontmatter",
+        "rule_task_load": "Você invoca: `/air-<nome>`",
+        "scope_hint": "Confira o `applyTo:` do frontmatter: ele precisa casar com arquivos que existem no projeto. "
+                      "Um glob que não casa com nada é uma rule que nunca carrega, e ela falha em silêncio.",
     },
     "ai-cockpit-reasoning": {
         "label": "AI/C Reasoning",
@@ -71,10 +84,18 @@ AGENTS = {
         "scope_key": None,
         "open_hint": "No VS Code, abra a **pasta-mãe** (raiz do repositório) com **File → Open Folder**. "
                      "Depois abra o painel do AI/C Reasoning e inicie uma conversa nova.",
-        "rule_area": "`{code}/.aicockpit/rules/air-*.md`",
-        "rule_task": "`{code}/.aicockpit/workflows/air-*.md`",
+        "scope_glob_key": None,
+        "rule_area_load": "Sem escopo: a pasta `rules/` carrega inteira, em toda sessão",
+        "rule_task_load": "Você invoca: `/air-<nome>.md`",
+        "scope_hint": "O AI/C Reasoning não tem escopo: a pasta `rules/` inteira é lida em toda sessão. "
+                      "Cada rule aprovada custa contexto sempre, então aprove só as que valem esse custo.",
     },
 }
+
+# Documentos que a skill propõe entre a espinha e as rules (passo 3 do hands-on),
+# pelo `kind` do MANIFEST.json do pacote.
+DOC_KINDS = ("constitution", "review-contract", "review-examples", "architecture",
+             "pr-template", "docs-index")
 
 LANG_LABEL = {"pt-BR": "Português", "en": "English"}
 SKIP_DIRS = {".git", ".github", "node_modules", CODE_DIR}
@@ -119,7 +140,7 @@ def find_manifests(base: Path, max_depth: int = 4) -> list[Path]:
 def identify() -> dict:
     manifests = find_manifests(ROOT)
     info = {"manifests": manifests, "agent": None, "lang": None,
-            "package_dir": None, "harness_dir": None}
+            "package_dir": None, "harness_dir": None, "manifest_files": []}
     if len(manifests) != 1:
         return info
     manifest = manifests[0]
@@ -136,9 +157,21 @@ def identify() -> dict:
     lang = (normalize_lang(str(data.get("lang", data.get("language", ""))))
             or normalize_lang(str(meta.get("lang", meta.get("language", ""))))
             or normalize_lang(package_dir.name))
+    files = data.get("files") if isinstance(data.get("files"), list) else []
     info.update(agent=agent, lang=lang, harness_dir=harness_dir,
-                package_dir=package_dir)
+                package_dir=package_dir, manifest_files=files)
     return info
+
+
+def manifest_entries(info: dict, kinds: tuple[str, ...]) -> list[dict]:
+    return [f for f in info["manifest_files"]
+            if isinstance(f, dict) and f.get("kind") in kinds and f.get("path")]
+
+
+def entry_paths(entry: dict) -> list[str]:
+    """Caminhos possíveis da entrada no projeto (sob CODE_DIR), incluindo as variantes por forja."""
+    paths = [entry["path"], *(entry.get("variants") or {}).values()]
+    return [f"{CODE_DIR}/{p}" for p in dict.fromkeys(paths)]
 
 
 def rel(path: Path | None) -> str:
@@ -151,15 +184,56 @@ def run_files(info: dict, name: str) -> list[Path]:
     return sorted(info["package_dir"].glob(f"runs/*/{name}"))
 
 
-def spine_placeholders(info: dict) -> set[str]:
-    """Placeholders `<...>` do template da espinha do próprio pacote do participante."""
+def template_placeholders(info: dict, name: str) -> set[str]:
+    """Placeholders `<...>` de um template do próprio pacote do participante."""
     if not info["harness_dir"]:
         return set()
-    tpl = info["harness_dir"] / "templates" / "spine.md"
+    tpl = info["harness_dir"] / "templates" / name
     if not tpl.is_file():
         return set()
     text = re.sub(r"<!--.*?-->", "", tpl.read_text(encoding="utf-8", errors="replace"), flags=re.S)
     return {m for m in re.findall(r"<[^<>\n!][^<>\n]{0,80}>", text)}
+
+
+def doc_body(path: Path) -> str:
+    """Texto do documento sem blocos de código e sem comentários HTML."""
+    text = path.read_text(encoding="utf-8", errors="replace")
+    body = re.sub(r"```.*?```", "", text, flags=re.S)
+    return re.sub(r"<!--.*?-->", "", body, flags=re.S)
+
+
+def spine_missing(body: str) -> list[str]:
+    found = {m.split("(")[0].strip() for m in re.findall(r"^## +(.+?)\s*$", body, flags=re.M)}
+    return [s for s in CONFIG["spine_sections"] if s not in found]
+
+
+def scope_globs(text: str, key: str) -> list[str]:
+    """Globs de escopo no frontmatter: `paths:` em lista, `applyTo:` com vírgulas, `fileMatchPattern:`."""
+    if not text.lstrip().startswith("---"):
+        return []
+    lines = text.lstrip().split("---")[1].splitlines()
+    for i, line in enumerate(lines):
+        m = re.match(rf"^{key}:\s*(.*)$", line.strip())
+        if not m:
+            continue
+        value = m.group(1).strip()
+        if value:
+            items = value.strip("[]").split(",")
+        else:
+            items = []
+            for nxt in lines[i + 1:]:
+                if not nxt.strip().startswith("-"):
+                    break
+                items.append(nxt.strip()[1:])
+        return [g for g in (it.strip().strip("'\"") for it in items) if g]
+    return []
+
+
+def glob_matches(pattern: str) -> bool:
+    try:
+        return any(CODE.glob(pattern.lstrip("/")))
+    except (ValueError, NotImplementedError):
+        return False
 
 
 def code_glob(patterns: list[str]) -> list[Path]:
@@ -216,11 +290,8 @@ def step2(info: dict, results: list, tips: list) -> None:
     exists = agents_md.is_file()
     results.append({"description": f"`{CODE_DIR}/AGENTS.md` criado", "passed": exists})
     if exists:
-        text = agents_md.read_text(encoding="utf-8", errors="replace")
-        body = re.sub(r"```.*?```", "", text, flags=re.S)
-        body = re.sub(r"<!--.*?-->", "", body, flags=re.S)
-        found = {m.split("(")[0].strip() for m in re.findall(r"^## +(.+?)\s*$", body, flags=re.M)}
-        missing = [s for s in CONFIG["spine_sections"] if s not in found]
+        body = doc_body(agents_md)
+        missing = spine_missing(body)
         results.append({
             "description": f"`AGENTS.md` com as {len(CONFIG['spine_sections'])} seções da espinha",
             "passed": not missing,
@@ -228,7 +299,7 @@ def step2(info: dict, results: list, tips: list) -> None:
         if missing:
             tips.append("Seções que não encontrei: " + ", ".join(f"`## {s}`" for s in missing)
                         + ". Os títulos ficam em inglês nos dois idiomas.")
-        leftovers = sorted(p for p in spine_placeholders(info) if p in body)
+        leftovers = sorted(p for p in template_placeholders(info, "spine.md") if p in body)
         results.append({
             "description": "Nenhum placeholder do template sobrando",
             "passed": not leftovers,
@@ -257,13 +328,41 @@ def step2(info: dict, results: list, tips: list) -> None:
 
 
 def step3(info: dict, results: list, tips: list) -> None:
+    diff, _ = changed_files()
+    package = rel(info["package_dir"])
+    decisions = [f for f in diff
+                 if package and f.startswith(f"{package}/runs/") and f.endswith("/DECISIONS.md")]
+    results.append({
+        "description": "Decisões sobre os documentos registradas (`runs/<projeto>/DECISIONS.md` atualizado neste push)",
+        "passed": bool(decisions),
+    })
+    if not decisions:
+        tips.append("Não encontrei alteração no `DECISIONS.md` neste push. É lá que a skill registra cada decisão, "
+                    "inclusive o motivo de cada documento dispensado. Faça o commit incluindo a pasta `runs/` do pacote.")
+    entries = manifest_entries(info, DOC_KINDS)
+    found = []  # um caminho por documento: o primeiro que existe, entre as variantes
+    for entry in entries:
+        hit = next((p for p in entry_paths(entry) if (ROOT / p).is_file()), None)
+        if hit:
+            found.append(hit)
+    results.append({
+        "description": f"Documentos do harness no projeto: {len(found)} de {len(entries)}"
+                       + (" (" + ", ".join(f"`{p}`" for p in found) + ")" if found
+                          else " (dispensados, ou o projeto já tinha os seus)"),
+        "passed": True,
+    })
+
+
+def step4(info: dict, results: list, tips: list) -> None:
     spec = AGENTS.get(info["agent"] or "")
     if not spec:
         results.append({"description": "Agente identificado pelo pacote", "passed": False})
         tips.append("Não identifiquei o agente. Confira o Passo 1.")
         return
-    rules = code_glob(spec["rule_globs"])
-    tasks = code_glob(spec["task_globs"])
+    # No Copilot o contrato de review fica em .github/instructions/, junto das rules.
+    not_rules = {p for e in manifest_entries(info, DOC_KINDS + ("spine", "pointer")) for p in entry_paths(e)}
+    rules = [r for r in code_glob(spec["rule_globs"]) if rel(r) not in not_rules]
+    tasks = [t for t in code_glob(spec["task_globs"]) if rel(t) not in not_rules]
     results.append({
         "description": f"Ao menos uma rule `air-*` do {spec['label']} aprovada e gravada ({len(rules) + len(tasks)} encontrada(s))",
         "passed": bool(rules or tasks),
@@ -280,6 +379,23 @@ def step3(info: dict, results: list, tips: list) -> None:
         })
         if unscoped:
             tips.append("Sem escopo: " + ", ".join(f"`{rel(r)}`" for r in unscoped[:3]))
+    if rules or tasks:
+        placeholders = template_placeholders(info, "rule-area.md") | template_placeholders(info, "rule-task-type.md")
+        leftovers = sorted({f"`{rel(r)}`" for r in rules + tasks if any(p in doc_body(r) for p in placeholders)})
+        results.append({
+            "description": "Nenhum campo do template sobrando nas rules",
+            "passed": not leftovers,
+        })
+        if leftovers:
+            tips.append("Ainda há campos `<...>` do template em: " + ", ".join(leftovers[:3])
+                        + ". Um escopo entre `<>` é um glob que não casa com nada.")
+    if spec["scope_glob_key"]:
+        sleeping = [f"`{rel(r)}` (`{g}`)" for r in rules
+                    for g in scope_globs(r.read_text(encoding="utf-8", errors="replace"), spec["scope_glob_key"])
+                    if "<" not in g and not glob_matches(g)]
+        if sleeping:
+            tips.append("Escopo que não casa com nenhum arquivo do projeto: " + ", ".join(sleeping[:3])
+                        + ". Uma rule assim nunca carrega; confira com a skill se o projeto ainda não tem esses arquivos.")
     decisions = run_files(info, "DECISIONS.md")
     results.append({
         "description": "Decisões da sessão registradas (`runs/<projeto>/DECISIONS.md`)",
@@ -300,13 +416,52 @@ def changed_files() -> tuple[list[str], list[str]]:
     return diff, existed
 
 
-def step4(info: dict, results: list, tips: list) -> None:
+def step5(info: dict, results: list, tips: list) -> None:
+    diff, _ = changed_files()
+    package = rel(info["package_dir"])
+    state = [f for f in diff if package and f.startswith(f"{package}/runs/") and f.endswith("/STATE.md")]
+    results.append({
+        "description": "Andamento registrado (`runs/<projeto>/STATE.md` atualizado neste push)",
+        "passed": bool(state),
+    })
+    if not state:
+        tips.append("Não encontrei alteração no `STATE.md` neste push. Faça o commit incluindo a pasta `runs/` do pacote.")
+    agents_md = CODE / "AGENTS.md"
+    missing = spine_missing(doc_body(agents_md)) if agents_md.is_file() else CONFIG["spine_sections"]
+    results.append({
+        "description": f"`AGENTS.md` com as {len(CONFIG['spine_sections'])} seções da espinha",
+        "passed": not missing,
+    })
+    if missing:
+        tips.append("Seções que não encontrei: " + ", ".join(f"`## {s}`" for s in missing) + ".")
+    spec = AGENTS.get(info["agent"] or "")
+    if spec and spec["pointer"]:
+        pointer = CODE / spec["pointer"]
+        reads = pointer.is_file() and "AGENTS.md" in pointer.read_text(encoding="utf-8", errors="replace")
+        results.append({
+            "description": f"Arquivo de ponteiro (`{CODE_DIR}/{spec['pointer']}`) carrega o `AGENTS.md`",
+            "passed": reads,
+        })
+        if not reads:
+            tips.append("Sem o ponteiro apontando para o `AGENTS.md`, nada do que foi instalado é lido pelo agente.")
+    notes = sorted({rel(p.parent) for p in CODE.rglob("STATE.md")
+                    if (p.parent / "PROJECT.md").is_file() or (p.parent / "DECISIONS.md").is_file()})
+    results.append({
+        "description": f"Nenhuma anotação da instalação (`runs/`) dentro de `{CODE_DIR}/`",
+        "passed": not notes,
+    })
+    if notes:
+        tips.append("As anotações da skill ficam no pacote, nunca no projeto: " + ", ".join(f"`{n}`" for n in notes[:3]) + ".")
+
+
+def step6(info: dict, results: list, tips: list) -> None:
     spec = AGENTS.get(info["agent"] or "")
     diff, existed = changed_files()
     harness_paths = [f"{CODE_DIR}/AGENTS.md"]
     if spec:
         if spec["pointer"]:
             harness_paths.append(f"{CODE_DIR}/{spec['pointer']}")
+    harness_paths += [p for e in manifest_entries(info, DOC_KINDS) for p in entry_paths(e)]
     harness_prefixes = (f"{CODE_DIR}/.claude/", f"{CODE_DIR}/.kiro/",
                         f"{CODE_DIR}/.github/instructions/", f"{CODE_DIR}/.github/prompts/",
                         f"{CODE_DIR}/.aicockpit/")
@@ -323,8 +478,8 @@ def step4(info: dict, results: list, tips: list) -> None:
         "passed": bool(harness_changes),
     })
     if not harness_changes:
-        tips.append("Ajuste o `AGENTS.md` ou uma rule `air-*` que já existia com o que você aprendeu na tarefa, "
-                    "e envie no mesmo push.")
+        tips.append("Ajuste o `AGENTS.md`, uma rule `air-*` ou outro documento do harness que já existia "
+                    "com o que você aprendeu na tarefa, e envie no mesmo push.")
     # TODO(projeto-base): verificação específica da tarefa (testes, arquivo esperado…)
 
 
@@ -333,11 +488,24 @@ def main() -> int:
     info = identify()
     results: list[dict] = []
     tips: list[str] = []
-    {1: step1, 2: step2, 3: step3, 4: step4}[step](info, results, tips)
+    {1: step1, 2: step2, 3: step3, 4: step4, 5: step5, 6: step6}[step](info, results, tips)
 
     spec = AGENTS.get(info["agent"] or "", {})
     pointer_note = (f"No {spec['label']}, o `AGENTS.md` vem acompanhado de `{CODE_DIR}/{spec['pointer']}`, "
                     "o arquivo que faz o agente lê-lo." if spec.get("pointer") else "")
+    docs = {e["kind"]: entry_paths(e)[0] for e in manifest_entries(info, DOC_KINDS)}
+    rule_paths = {e["kind"]: entry_paths(e)[0].replace("<name>", "<nome>")
+                  for e in manifest_entries(info, ("rule-area", "rule-task-type"))}
+    label = spec.get("label", "")
+    if spec.get("pointer"):
+        spine_reach = f"o `{CODE_DIR}/{spec['pointer']}` carrega o `AGENTS.md`"
+    else:
+        spine_reach = f"o {label} lê o `AGENTS.md` nativamente" if label else ""
+    if spec.get("scope_glob_key"):
+        verify_scope = "o escopo de cada rule de área casa com arquivos que existem no projeto"
+    else:
+        verify_scope = (f"o escopo das rules não se aplica: no {label} elas não têm escopo, "
+                        "e cada uma é lida em toda sessão") if label else ""
     payload = {
         "step_number": step,
         "results_table": results,
@@ -349,8 +517,14 @@ def main() -> int:
         "code_dir": CODE_DIR,
         "open_hint": spec.get("open_hint", "Abra o seu agente na **pasta-mãe** (raiz do repositório)."),
         "pointer_note": pointer_note,
-        "rule_area": spec.get("rule_area", "").format(code=CODE_DIR),
-        "rule_task": spec.get("rule_task", "").format(code=CODE_DIR),
+        **{f"doc_{kind.replace('-', '_')}": docs.get(kind, "") for kind in DOC_KINDS},
+        "rule_area_path": rule_paths.get("rule-area", ""),
+        "rule_area_load": spec.get("rule_area_load", ""),
+        "rule_task_path": rule_paths.get("rule-task-type", ""),
+        "rule_task_load": spec.get("rule_task_load", ""),
+        "scope_hint": spec.get("scope_hint", ""),
+        "spine_reach": spine_reach,
+        "verify_scope": verify_scope,
     }
     passed = all(r["passed"] for r in results)
     out = os.environ.get("GITHUB_OUTPUT")

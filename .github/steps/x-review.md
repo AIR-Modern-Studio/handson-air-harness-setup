@@ -4,7 +4,9 @@ Você configurou um Outer Harness do começo ao fim com o **{{ agent_label | def
 
 - ✅ Montou a pasta-mãe com o pacote ao lado do código.
 - ✅ Gerou e validou o `AGENTS.md`, a espinha que o agente lê em toda conversa.
+- ✅ Decidiu os demais documentos (constitution, review, arquitetura…), aprovando só o que fazia sentido.
 - ✅ Aprovou rules sob medida, com escopo, sem copiar nada do pacote.
+- ✅ Fechou a instalação com a espinha revisada, a verificação independente e a entrega.
 - ✅ Usou o harness numa tarefa real e devolveu o aprendizado para o documento.
 
 ### O que fica no projeto e o que não fica

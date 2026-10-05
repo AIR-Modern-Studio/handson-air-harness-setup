@@ -15,7 +15,7 @@ A instalação acontece numa sessão à parte das sessões em que você trabalha
 1. **O planejamento.** A skill mostra o que encontrou, o que vai propor, em que ordem e quantos itens são, e grava isso em `PLAN.md`. É orientação, não aprovação: é a hora de dispensar o que você não quiser, antes de ela gerar. Cada documento ainda passa pela sua validação.
 1. **A espinha.** O primeiro item é o `AGENTS.md`, junto com o arquivo de ponteiro, se o seu agente usar um. A skill entrevista você só sobre o que os documentos e o código não responderam. "Não sei" e "pula" são respostas válidas: ela marca a lacuna e segue.
 1. **Rascunho → validação → gravação.** Cada documento vai primeiro para `{{ package_dir }}/runs/{{ code_dir }}/draft/`. Você lê no editor, pede ajustes, e só então a skill grava no projeto.
-1. **Os demais documentos e as rules** vêm depois, um de cada vez. Eles ficam para o Passo 3.
+1. **Os demais documentos e as rules** vêm depois, um de cada vez: os documentos no Passo 3 e as rules no Passo 4.
 
 **Memória da instalação.** A cada etapa, a skill registra o andamento em `{{ package_dir }}/runs/{{ code_dir }}/` (`STATE.md`, `PROJECT.md`, `PLAN.md`, `DECISIONS.md`). Se você abrir uma sessão nova, o mesmo gatilho retoma de onde parou.
 
@@ -47,7 +47,7 @@ A instalação acontece numa sessão à parte das sessões em que você trabalha
 
    > ❕ **Importante:** na skill, nada é obrigatório. A obrigação é dela: depois de ler o projeto, ela sempre propõe o `AGENTS.md`, mesmo que conclua que nada mais é necessário. Aprovar, ajustar ou recusar cada documento é decisão sua.
 
-1. Quando o `AGENTS.md` for gravado, avise a skill que vai parar por aqui: os demais documentos e as rules ficam para o Passo 3. Confira que o andamento ficou registrado em `{{ package_dir }}/runs/{{ code_dir }}/STATE.md`.
+1. Quando o `AGENTS.md` for gravado, avise a skill que vai parar por aqui: os demais documentos ficam para o Passo 3 e as rules para o Passo 4. Confira que o andamento ficou registrado em `{{ package_dir }}/runs/{{ code_dir }}/STATE.md`.
 
 1. Confira que o arquivo foi gravado em `{{ code_dir }}/AGENTS.md`. {{ pointer_note | safe }}
 

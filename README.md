@@ -31,7 +31,9 @@ O AI/R Harness Setup é o conjunto de arquivos de instrução que orienta o agen
 
 1. **Montar a pasta-mãe.** Baixe o pacote do seu agente e extraia ao lado do código, nunca dentro.
 1. **Gerar a espinha.** O agente entrevista você e propõe o `AGENTS.md`. Você ajusta e aprova.
-1. **Aprovar rules.** Escolha pelo menos uma das rules candidatas e valide.
+1. **Decidir os demais documentos.** Constitution, review, arquitetura e outros: a skill propõe um por vez, e você aprova, ajusta ou dispensa.
+1. **Aprovar rules.** A skill propõe rules de área e playbooks a partir do projeto; você escolhe pelo menos uma.
+1. **Fechar a instalação.** A skill revisa a espinha, verifica a sessão inteira e mostra o que ficou onde.
 1. **Usar e ajustar.** Faça uma tarefa real com o agente e leve o que aprendeu de volta ao documento.
 
 Cada passo chega numa issue do seu repositório. A cada push na `main`, uma verificação automática responde nessa issue e libera o passo seguinte. Você faz no seu ritmo.

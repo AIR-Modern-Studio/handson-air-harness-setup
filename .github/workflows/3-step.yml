@@ -5,11 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'projeto/.claude/**'
-      - 'projeto/.kiro/**'
-      - 'projeto/.github/instructions/**'
-      - 'projeto/.github/prompts/**'
-      - 'projeto/.aicockpit/**'
+      - '**/runs/**/DECISIONS.md'
 
 permissions:
   contents: read

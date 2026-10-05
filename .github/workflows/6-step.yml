@@ -1,15 +1,11 @@
-name: Passo 4
+name: Passo 6
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'projeto/.claude/**'
-      - 'projeto/.kiro/**'
-      - 'projeto/.github/instructions/**'
-      - 'projeto/.github/prompts/**'
-      - 'projeto/.aicockpit/**'
+      - 'projeto/**'
 
 permissions:
   contents: read
@@ -56,12 +52,12 @@ jobs:
           file: .github/translations/checking-work.md
           edit-mode: replace
 
-      - name: Verificar o passo 4
+      - name: Verificar o passo 6
         id: check
         env:
           BEFORE_SHA: ${{ github.event.before }}
           AFTER_SHA: ${{ github.sha }}
-        run: python3 .github/scripts/check_step.py 4
+        run: python3 .github/scripts/check_step.py 6
 
       - name: Comentário - resultado do passo
         uses: GrantBirki/comment@v2.1.1
@@ -77,8 +73,8 @@ jobs:
         if: steps.check.outputs.passed != 'true'
         run: exit 1
 
-  post_next_step_content:
-    name: Postar o próximo passo
+  post_review_content:
+    name: Postar a revisão
     needs: [find_exercise, check_step_work]
     runs-on: ubuntu-latest
     env:
@@ -89,33 +85,76 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Comentário - passo concluído
+      - name: Comentário - revisão a seguir
         uses: GrantBirki/comment@v2.1.1
         with:
           repository: ${{ env.ISSUE_REPOSITORY }}
           issue-number: ${{ env.ISSUE_NUMBER }}
-          file: .github/translations/step-finished-prepare-next-step.md
-          vars: |
-            next_step_number: 5
+          file: .github/translations/lesson-review.md
 
-      - name: Comentário - conteúdo do passo 5
+      - name: Comentário - revisão
         uses: GrantBirki/comment@v2.1.1
         with:
           repository: ${{ env.ISSUE_REPOSITORY }}
           issue-number: ${{ env.ISSUE_NUMBER }}
-          file: .github/steps/5-step.md
+          file: .github/steps/x-review.md
           vars: ${{ needs.check_step_work.outputs.vars }}
 
-      - name: Comentário - acompanhando
+      - name: Desabilitar este passo
+        run: gh workflow disable "${{ github.workflow }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  finish_exercise:
+    name: Encerrar o exercício
+    needs: [find_exercise, post_review_content]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    env:
+      ISSUE_REPOSITORY: ${{ github.repository }}
+      ISSUE_NUMBER: ${{ needs.find_exercise.outputs.issue-number }}
+      ISSUE_URL: ${{ needs.find_exercise.outputs.issue-url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: main
+
+      - name: Montar o README de conclusão
+        id: build-readme
+        uses: skills/action-text-variables@v4
+        with:
+          template-file: .github/translations/readme-exercise-finished.md
+          template-vars: |
+            title: AI/R Harness Setup — Configurando um Outer Harness na prática
+            login: ${{ github.actor }}
+            issue_url: ${{ env.ISSUE_URL }}
+
+      - name: Sobrescrever o README
+        env:
+          README_TEXT: ${{ steps.build-readme.outputs.updated-text }}
+        run: echo "$README_TEXT" > README.md
+
+      - name: Commit do README
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: "README.md"
+          message: "Concluir o exercício"
+          default_author: github_actions
+
+      - name: Comentário - exercício concluído
         uses: GrantBirki/comment@v2.1.1
         with:
           repository: ${{ env.ISSUE_REPOSITORY }}
           issue-number: ${{ env.ISSUE_NUMBER }}
-          file: .github/translations/watching-for-progress.md
+          file: .github/translations/exercise-finished.md
+          vars: |
+            login: ${{ github.actor }}
 
-      - name: Desabilitar este passo e habilitar o próximo
-        run: |
-          gh workflow disable "${{ github.workflow }}"
-          gh workflow enable "Passo 5"
+      - name: Fechar a issue
+        run: gh issue close "${{ env.ISSUE_URL }}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
