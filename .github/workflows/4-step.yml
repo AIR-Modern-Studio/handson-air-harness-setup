@@ -16,6 +16,8 @@ jobs:
   find_exercise:
     name: Encontrar a issue do exercício
     uses: skills/exercise-toolkit/.github/workflows/find-exercise-issue.yml@v0.9.3
+    with:
+      issue-title-text: "Exercício:"
 
   check_step_work:
     name: Verificar o trabalho do passo
@@ -106,7 +108,53 @@ jobs:
   finish_exercise:
     name: Encerrar o exercício
     needs: [find_exercise, post_review_content]
-    uses: skills/exercise-toolkit/.github/workflows/finish-exercise.yml@v0.9.3
-    with:
-      issue-url: ${{ needs.find_exercise.outputs.issue-url }}
-      exercise-title: "AI/R Harness Setup — Configurando um Outer Harness na prática"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    env:
+      ISSUE_REPOSITORY: ${{ github.repository }}
+      ISSUE_NUMBER: ${{ needs.find_exercise.outputs.issue-number }}
+      ISSUE_URL: ${{ needs.find_exercise.outputs.issue-url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: main
+
+      - name: Montar o README de conclusão
+        id: build-readme
+        uses: skills/action-text-variables@v4
+        with:
+          template-file: .github/translations/readme-exercise-finished.md
+          template-vars: |
+            title: AI/R Harness Setup — Configurando um Outer Harness na prática
+            login: ${{ github.actor }}
+            issue_url: ${{ env.ISSUE_URL }}
+
+      - name: Sobrescrever o README
+        env:
+          README_TEXT: ${{ steps.build-readme.outputs.updated-text }}
+        run: echo "$README_TEXT" > README.md
+
+      - name: Commit do README
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: "README.md"
+          message: "Concluir o exercício"
+          default_author: github_actions
+
+      - name: Comentário - exercício concluído
+        uses: GrantBirki/comment@v2.1.1
+        with:
+          repository: ${{ env.ISSUE_REPOSITORY }}
+          issue-number: ${{ env.ISSUE_NUMBER }}
+          file: .github/translations/exercise-finished.md
+          vars: |
+            login: ${{ github.actor }}
+
+      - name: Fechar a issue
+        run: gh issue close "${{ env.ISSUE_URL }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
