@@ -13,8 +13,8 @@ Três ideias guiam o exercício:
 - **Você escolhe o agente.** Existe um pacote por agente (Claude Code, Kiro, GitHub Copilot, AI/C Reasoning) e por idioma. A partir do pacote que você colocar aqui, eu identifico qual você está usando.
 
 > [!TIP]
-> A página do Outer Harness no site AI Champions tem os downloads e os guias de apoio:
-> https://airportal.sharepoint.com/sites/ai-adoption/ai-champions/SitePages/Outer-Harness.aspx
+> A página do AI/R Harness Setup no site AI Champions tem os downloads e os guias de apoio:
+> https://airportal.sharepoint.com/sites/ai-adoption/ai-champions/SitePages/AIR-Harness-Setup.aspx
 
 ### ⌨️ Atividade: Clonar o repositório
 

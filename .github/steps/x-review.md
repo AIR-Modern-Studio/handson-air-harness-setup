@@ -17,4 +17,4 @@ Você configurou um Outer Harness do começo ao fim com o **{{ agent_label | def
 
 **Use em seu projeto.** O mesmo pacote serve para outros projetos da mesma pasta-mãe: extraia ao lado, abra o agente na pasta-mãe e envie o gatilho com a pasta do projeto.
 
-- [Página do Outer Harness no site AI Champions](https://airportal.sharepoint.com/sites/ai-adoption/ai-champions/SitePages/Outer-Harness.aspx): downloads e guias de apoio.
+- [Página do AI/R Harness Setup no site AI Champions](https://airportal.sharepoint.com/sites/ai-adoption/ai-champions/SitePages/AIR-Harness-Setup.aspx): downloads e guias de apoio.
