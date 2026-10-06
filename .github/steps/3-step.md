@@ -24,9 +24,11 @@ A espinha está gravada. Agora a skill passa pelos outros documentos do harness,
 
 1. Continue a instalação. Pode ser na mesma sessão do Passo 2 ou numa nova; uma sessão nova começa com o contexto limpo, o que ajuda se a conversa já ficou longa. Numa sessão nova, abra o agente na pasta-mãe e envie a primeira linha do gatilho do Passo 2: a skill lê o registro em `{{ package_dir }}/runs/{{ code_dir }}/` e retoma de onde parou.
 
-1. Para cada documento que a skill apresentar, leia o resumo e as perguntas em aberto, abra o rascunho no editor e decida: aprove, peça ajustes ou dispense.
+1. Para cada documento que a skill apresentar, leia o resumo e as perguntas em aberto, abra o rascunho no editor e decida: aprove, peça ajustes ou dispense. Nem sempre o agente mostra o rascunho na tela, principalmente no CLI: os arquivos estão em `{{ package_dir }}/runs/{{ code_dir }}/draft/`.
 
    > ❕ **Importante:** nenhum destes documentos é obrigatório. Dispensar é uma decisão, não uma falha, e fica registrada com o motivo em `DECISIONS.md`.
+
+   > ❕ **Importante:** as respostas do agente nem sempre são determinísticas. A conversa pode ter alguns passos a mais do que os descritos aqui, como uma pergunta ou uma confirmação extra: responda e siga normalmente.
 
 1. Quando a skill chegar às **rules candidatas**, avise que vai parar por aqui: as rules ficam para o Passo 4. Confira que o andamento ficou registrado em `{{ package_dir }}/runs/{{ code_dir }}/STATE.md`.
 

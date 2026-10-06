@@ -6,7 +6,7 @@ As rules estão gravadas. Falta a skill fechar a instalação: rever a espinha, 
 
 ### 📖 A espinha revisada
 
-Quando um trecho do `AGENTS.md` vira rule, ele sai da espinha, o que deixa um buraco ou uma repetição. A skill mostra o `AGENTS.md` revisado, com os ponteiros para as rules novas, e você valida de novo. Nada que você já aprovou muda sem passar por você outra vez. Se nada saiu da espinha, esta etapa não acontece.
+Quando um trecho do `AGENTS.md` vira rule, ele sai da espinha, o que deixa um buraco ou uma repetição. A skill mostra o `AGENTS.md` revisado, com os ponteiros para as rules novas, e você valida de novo. Nada que você já aprovou muda sem passar por você outra vez. Antes de mexer no `AGENTS.md`, a skill guarda uma cópia dele em `{{ package_dir }}/runs/{{ code_dir }}/before/`: o projeto não tem controle de versão próprio, e essa cópia é o que permite desfazer a revisão. Se nada saiu da espinha, esta etapa não acontece.
 
 ### 📖 A verificação independente
 
@@ -29,9 +29,11 @@ No fim, a skill mostra o que foi escrito, onde ficou e como chega ao agente; o q
 
 1. Continue a instalação, na mesma sessão ou numa nova. Numa sessão nova, abra o agente na pasta-mãe e envie a primeira linha do gatilho do Passo 2.
 
-1. Se a skill mostrar o `AGENTS.md` revisado, leia e valide.
+1. Se a skill apresentar o `AGENTS.md` revisado, leia e valide. Nem sempre o agente mostra o rascunho na tela, principalmente no CLI: o arquivo está em `{{ package_dir }}/runs/{{ code_dir }}/draft/`.
 
 1. Leia a verificação. Se algum item falhou, decida com a skill o que fazer.
+
+   > ❕ **Importante:** as respostas do agente nem sempre são determinísticas. A conversa pode ter alguns passos a mais do que os descritos aqui, como uma pergunta ou uma confirmação extra: responda e siga normalmente.
 
 1. Leia a entrega e compare com o que você aprovou. Anote o que ficou em aberto.
 

@@ -30,7 +30,7 @@ A instalação acontece numa sessão à parte das sessões em que você trabalha
    ```text
    Leia `{{ package_dir }}/harness/skills/air-harness-setup/SKILL.md` e instale o harness no projeto `{{ code_dir }}`.
 
-   Sobre o projeto: servidor MCP em TypeScript/Node que gera dados brasileiros fictícios para teste (pessoas, CPF, CNH, PIS…) chamando o site 4Devs. O `README.md` e a pasta `.github/` da raiz são o roteiro deste hands-on, não fazem parte do projeto: ignore os dois.
+   Sobre o projeto: servidor MCP em TypeScript/Node que gera dados brasileiros fictícios para teste (pessoas, CPF, CNH, PIS…) chamando o site 4Devs. Não tem controle de versão, CI nem forja próprios: o git deste repositório (histórico, branches, PRs), o `README.md` e a pasta `.github/` da raiz são do roteiro deste hands-on. Ignore todos eles.
    ```
 
 1. Confirme a pasta do projeto quando a skill perguntar (`{{ code_dir }}`).
