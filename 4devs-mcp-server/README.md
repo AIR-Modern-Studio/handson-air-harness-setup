@@ -686,7 +686,7 @@ docker run -i --rm 4devs-mcp-server
 ## 🏗️ Estrutura do Projeto
 
 ```txt
-projeto/
+4devs-mcp-server/
 ├── src/
 │   ├── api/
 │   │   ├── client.ts               # Cliente HTTP para API 4Devs

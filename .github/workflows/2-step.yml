@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'projeto/AGENTS.md'
+      - '4devs-mcp-server/AGENTS.md'
 
 permissions:
   contents: read

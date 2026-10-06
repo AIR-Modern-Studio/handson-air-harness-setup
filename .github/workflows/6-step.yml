@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'projeto/**'
+      - '4devs-mcp-server/**'
 
 permissions:
   contents: read
