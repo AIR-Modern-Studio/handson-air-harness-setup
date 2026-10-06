@@ -54,6 +54,11 @@ jobs:
           file: .github/translations/checking-work.md
           edit-mode: replace
 
+      - name: Preparar o Node (npm audit)
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
       - name: Verificar o passo 6
         id: check
         env:
