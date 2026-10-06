@@ -296,7 +296,7 @@ def step1(info: dict, results: list, tips: list) -> None:
         })
         if not (agent_ok and lang_ok):
             tips.append("Não consegui ler agente/idioma do `MANIFEST.json` nem do nome da pasta. "
-                        "Use o zip baixado da página do Outer Harness sem renomear a pasta.")
+                        "Use o zip baixado da página do AI/R Harness Setup sem renomear a pasta.")
         skill = list(info["harness_dir"].glob("skills/air-harness-setup/SKILL*.md"))
         results.append({
             "description": "Skill `air-harness-setup` presente no pacote",

@@ -4,7 +4,7 @@ Este repositório já está organizado do jeito que o AI/R Harness Setup trabalh
 
 ### 📖 O que é o AI/R Harness Setup
 
-O Outer Harness é o conjunto de documentos que orienta o agente dentro de um projeto: o `AGENTS.md` (a espinha), as rules e os demais documentos. O pacote do AI/R Harness Setup traz a matéria-prima desses documentos e a skill `air-harness-setup`, que conduz a instalação com você.
+O AI/R Harness Setup é o conjunto de documentos que orienta o agente dentro de um projeto: o `AGENTS.md` (a espinha), as rules e os demais documentos. O pacote traz a matéria-prima desses documentos e a skill `air-harness-setup`, que conduz a instalação com você.
 
 Três ideias guiam o exercício:
 
@@ -35,7 +35,7 @@ Três ideias guiam o exercício:
 
 ### ⌨️ Atividade: Baixar e extrair o pacote
 
-1. Na página do Outer Harness, baixe o zip do **agente que você vai usar**, no **idioma** que preferir.
+1. Na [página do AI/R Harness Setup](https://airportal.sharepoint.com/sites/ai-adoption/ai-champions/SitePages/AIR-Harness-Setup.aspx), baixe o zip do **agente que você vai usar**, no **idioma** que preferir.
 
 1. Extraia o zip **na raiz do repositório**, ao lado de `{{ code_dir }}/`. O zip já traz a pasta `air-harness-<agente>-<idioma>/`: extraia direto na raiz, sem criar outra pasta em volta (no Windows, em **Extrair tudo**, aponte o destino para a raiz do repositório). Não renomeie a pasta: o nome dela identifica o agente e o idioma.
 
