@@ -136,7 +136,6 @@ jobs:
         with:
           template-file: .github/translations/readme-exercise-finished.md
           template-vars: |
-            title: AI/R Harness Setup — Configurando um Outer Harness na prática
             login: ${{ github.actor }}
             issue_url: ${{ env.ISSUE_URL }}
 

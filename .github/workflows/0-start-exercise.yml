@@ -69,7 +69,6 @@ jobs:
         with:
           template-file: .github/translations/readme-exercise-started.md
           template-vars: |
-            title: ${{ env.EXERCISE_TITLE }}
             login: ${{ github.actor }}
             issue_url: ${{ steps.create-issue.outputs.ISSUE_URL }}
 
