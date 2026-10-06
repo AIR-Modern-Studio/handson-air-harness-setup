@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { FourDevsClient } from '../api/client.js';
+import { FourDevsApi } from '../api/types.js';
+import { requireText } from './api-response.js';
 import { gerarPisSchema, GerarPisInput } from '../schemas/tool-schemas.js';
 
 /**
@@ -25,7 +25,7 @@ export const gerarPisTool = {
     required: []
   } as const,
 
-  async execute(client: FourDevsClient, args: unknown) {
+  async execute(client: FourDevsApi, args: unknown) {
     console.error('[Tool] Executing gerar_pis...');
     
     // Validate input
@@ -33,6 +33,7 @@ export const gerarPisTool = {
     
     // Call API
     const result = await client.gerarPis(validatedArgs);
+    const pisNumber = requireText(result);
     
     console.error('[Tool] PIS generated successfully');
     
@@ -41,7 +42,7 @@ export const gerarPisTool = {
         {
           type: 'text' as const,
           text: JSON.stringify({
-            pis: result.trim()
+            pis: pisNumber
           }, null, 2)
         }
       ]

@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { FourDevsClient } from '../api/client.js';
+import { FourDevsApi } from '../api/types.js';
+import { requireText } from './api-response.js';
 import { geradorCertidaoSchema, GeradorCertidaoInput } from '../schemas/tool-schemas.js';
 
 /**
@@ -32,7 +32,7 @@ export const geradorCertidaoTool = {
     required: []
   } as const,
 
-  async execute(client: FourDevsClient, args: unknown) {
+  async execute(client: FourDevsApi, args: unknown) {
     console.error('[Tool] Executing gerador_certidao...');
     
     // Validate input
@@ -40,11 +40,9 @@ export const geradorCertidaoTool = {
     
     // Call API
     const result = await client.gerarCertidao(validatedArgs);
+    const certidaoNumber = requireText(result);
     
     console.error('[Tool] Certificate generated successfully');
-    
-    // Result is now guaranteed to be a string due to responseType: 'text'
-    const certidaoNumber = result.trim();
     
     return {
       content: [

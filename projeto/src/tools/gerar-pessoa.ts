@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { FourDevsClient } from '../api/client.js';
+import { FourDevsApi } from '../api/types.js';
+import { unexpectedApiResponse } from './api-response.js';
 import { gerarPessoaSchema, GerarPessoaInput } from '../schemas/tool-schemas.js';
 
 /**
@@ -57,7 +57,7 @@ export const gerarPessoaTool = {
     required: ['sexo', 'txt_qtde']
   } as const,
 
-  async execute(client: FourDevsClient, args: unknown) {
+  async execute(client: FourDevsApi, args: unknown) {
     console.error('[Tool] Executing gerar_pessoa...');
     
     // Validate input
@@ -65,6 +65,11 @@ export const gerarPessoaTool = {
     
     // Call API
     const result = await client.gerarPessoa(validatedArgs);
+    
+    const isPessoa = (pessoa: unknown) => typeof pessoa === 'object' && pessoa !== null && !Array.isArray(pessoa);
+    if (!Array.isArray(result) || result.length === 0 || !result.every(isPessoa)) {
+      throw unexpectedApiResponse('era esperada uma lista de pessoas');
+    }
     
     console.error(`[Tool] Generated ${result.length} person(s)`);
     

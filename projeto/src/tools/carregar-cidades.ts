@@ -1,6 +1,19 @@
-import { z } from 'zod';
-import { FourDevsClient } from '../api/client.js';
+import { FourDevsApi } from '../api/types.js';
+import { unexpectedApiResponse } from './api-response.js';
 import { carregarCidadesSchema, CarregarCidadesInput } from '../schemas/tool-schemas.js';
+
+/**
+ * Read the value attribute of an <option>, ignoring text quoted inside other attributes.
+ * Each token consumes its characters once, so the cost is linear.
+ */
+function optionValue(attributes: string): string | undefined {
+  for (const [, name, ...values] of attributes.matchAll(/([\w:-]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+)))?|[^\w:-]+/g)) {
+    if (name?.toLowerCase() === 'value') {
+      return values.find(value => value !== undefined);
+    }
+  }
+  return undefined;
+}
 
 /**
  * Tool: Load cities by Brazilian state
@@ -29,7 +42,7 @@ export const carregarCidadesTool = {
     required: ['cep_estado']
   } as const,
 
-  async execute(client: FourDevsClient, args: unknown) {
+  async execute(client: FourDevsApi, args: unknown) {
     console.error('[Tool] Executing carregar_cidades...');
     
     // Validate input
@@ -38,12 +51,17 @@ export const carregarCidadesTool = {
     // Call API
     const result = await client.carregarCidades(validatedArgs);
     
-    // Parse HTML to extract city information
-    const cityMatches = result.matchAll(/<option value="(\d+)">([^<]+)<\/option>/g);
-    const cities = Array.from(cityMatches).map(match => ({
-      code: parseInt(match[1]),
-      name: match[2]
-    }));
+    // Parse each <option> on its own (split + anchored regex), so malformed HTML stays linear time
+    const cities = result.split(/<option\b/i).slice(1).flatMap(option => {
+      const tag = /^((?:[^>"']|"[^"]*"|'[^']*')*)>([^<]*)<\/option>/i.exec(option);
+      const code = tag ? optionValue(tag[1]) : undefined;
+      const name = tag?.[2].trim();
+      return code && /^\d+$/.test(code) && name ? [{ code: parseInt(code), name }] : [];
+    });
+    
+    if (cities.length === 0) {
+      throw unexpectedApiResponse(`nenhuma cidade encontrada para ${validatedArgs.cep_estado}`);
+    }
     
     console.error(`[Tool] Loaded ${cities.length} cities for ${validatedArgs.cep_estado}`);
     

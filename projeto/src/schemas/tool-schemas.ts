@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // Brazilian UF codes (27 Federal Units)
-const brazilianUFs = [
+export const brazilianUFs = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
   'MS', 'MT', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
   'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'

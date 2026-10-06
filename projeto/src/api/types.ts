@@ -67,3 +67,13 @@ export type GeradorCertidaoResponse = string; // Plain text certificate number
 export type GeradorCnhResponse = string; // Plain text CNH number
 export type GeradorPisResponse = string; // Plain text PIS number
 export type GeradorTituloEleitorResponse = string; // Plain text voter registration number
+
+// Public surface of the 4Devs client, so tools can run against a fake in tests
+export interface FourDevsApi {
+  gerarPessoa(params: Omit<GeradorPessoaRequest, 'acao'>): Promise<GeradorPessoaResponse>;
+  carregarCidades(params: Omit<CarregarCidadesRequest, 'acao'>): Promise<CarregarCidadesResponse>;
+  gerarCertidao(params: Omit<GeradorCertidaoRequest, 'acao'>): Promise<GeradorCertidaoResponse>;
+  gerarCnh(): Promise<GeradorCnhResponse>;
+  gerarPis(params: Omit<GeradorPisRequest, 'acao'>): Promise<GeradorPisResponse>;
+  gerarTituloEleitor(params: Omit<GeradorTituloEleitorRequest, 'acao'>): Promise<GeradorTituloEleitorResponse>;
+}

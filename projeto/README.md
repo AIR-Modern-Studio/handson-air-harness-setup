@@ -121,7 +121,7 @@ Gera números válidos de Título de Eleitor.
 
 #### Pré-requisitos
 
-- Node.js 18 ou superior
+- Node.js 22 ou superior
 - npm ou yarn
 
 #### Passos de Instalação
@@ -260,6 +260,54 @@ REQUEST_TIMEOUT=30000
   }
 }
 ```
+
+### Uso atrás de Proxy Corporativo (Inspeção TLS)
+
+O servidor verifica o certificado TLS da API 4Devs (comportamento padrão do Node.js). Em redes com proxy que inspeciona TLS, o proxy reassina o tráfego com a CA corporativa, e as chamadas falham com um erro como `SELF_SIGNED_CERT_IN_CHAIN` ou `unable to get local issuer certificate`.
+
+Clientes MCP costumam iniciar o servidor com um ambiente reduzido. Por isso, mesmo que `NODE_EXTRA_CA_CERTS` já esteja definida no seu terminal, declare-a no `env` da configuração do servidor.
+
+A solução é fazer o Node.js confiar na CA corporativa. Peça o certificado da CA (formato PEM) à equipe de infraestrutura e use uma das opções abaixo.
+
+**NPM/Node.js:** aponte `NODE_EXTRA_CA_CERTS` para o arquivo PEM no `env` da configuração do servidor no cliente MCP:
+
+```json
+{
+  "mcpServers": {
+    "4devs": {
+      "command": "node",
+      "args": ["/caminho/para/build/index.js"],
+      "env": {
+        "NODE_EXTRA_CA_CERTS": "/caminho/para/ca-corporativa.pem"
+      }
+    }
+  }
+}
+```
+
+Se a CA corporativa já estiver instalada no repositório de certificados do sistema operacional, use `"NODE_USE_SYSTEM_CA": "1"` no lugar de `NODE_EXTRA_CA_CERTS`. Essa variável existe a partir do Node.js 22.19.0 (e 24.6.0).
+
+**Docker:** monte o PEM no container e passe `NODE_EXTRA_CA_CERTS` apontando para ele:
+
+```json
+{
+  "mcpServers": {
+    "4devs": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-v", "/caminho/para/ca-corporativa.pem:/certs/ca-corporativa.pem:ro",
+        "-e", "NODE_EXTRA_CA_CERTS=/certs/ca-corporativa.pem",
+        "4devs-mcp-server"
+      ]
+    }
+  }
+}
+```
+
+O container roda como o usuário `node` (uid 1000), então o arquivo PEM montado precisa ter permissão de leitura para esse usuário (por exemplo, `chmod 644`).
+
+> ⚠️ **Não use `NODE_TLS_REJECT_UNAUTHORIZED=0`.** Essa variável desliga a verificação de certificados de todas as conexões do processo e expõe o tráfego a interceptação. Ela não é uma alternativa aceitável à configuração da CA.
 
 ## 📖 Guia de Uso Detalhado
 
@@ -599,6 +647,9 @@ Gera números de Título de Eleitor.
 ### Testar Localmente
 
 ```bash
+# Testes unitários (sem rede; usam uma API 4Devs falsa)
+npm test
+
 # Compilar o projeto
 npm run build
 
@@ -645,6 +696,7 @@ projeto/
 │   ├── schemas/
 │   │   └── tool-schemas.ts         # Schemas Zod para validação
 │   ├── tools/
+│   │   ├── api-response.ts         # Validação das respostas da API 4Devs
 │   │   ├── gerar-pessoa.ts         # Tool: Gerar Pessoa
 │   │   ├── carregar-cidades.ts     # Tool: Carregar Cidades
 │   │   ├── gerador-certidao.ts     # Tool: Gerador Certidão
@@ -653,7 +705,10 @@ projeto/
 │   │   └── gerar-titulo-eleitor.ts # Tool: Gerar Título Eleitor
 │   ├── server.ts                   # Implementação do servidor MCP
 │   └── index.ts                    # Ponto de entrada
+├── test/                           # Testes unitários (node:test)
+│   └── helpers/fake-api.ts         # API 4Devs falsa para os testes
 ├── build/                          # Código compilado (gerado)
+├── build-test/                     # Testes compilados (gerado)
 ├── node_modules/                   # Dependências (gerado)
 ├── test-tools.js                   # Testes de integração das tools (requer build; chama a API real)
 ├── Dockerfile                      # Configuração Docker
@@ -662,6 +717,7 @@ projeto/
 ├── package.json                    # Configuração npm
 ├── package-lock.json               # Versões travadas das dependências (usado pelo npm ci)
 ├── tsconfig.json                   # Configuração TypeScript
+├── tsconfig.test.json              # Configuração TypeScript dos testes
 └── README.md                       # Esta documentação
 ```
 
@@ -685,6 +741,8 @@ npm run inspector
 # Limpar arquivos compilados
 npm run clean
 ```
+
+O `npm run dev` reinicia o servidor a cada arquivo salvo em `src/`. A cada reinício, o cliente MCP conectado perde a sessão e o Node escreve `Restarting ...` no stdout. Para usar com um cliente MCP (Inspector, Claude Desktop), compile com `npm run build` e configure o cliente para rodar `node build/index.js`: o `npm start` também escreve o banner do npm no stdout.
 
 ### Adicionar Nova Ferramenta
 

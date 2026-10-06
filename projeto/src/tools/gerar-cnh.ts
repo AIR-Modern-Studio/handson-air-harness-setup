@@ -1,6 +1,6 @@
-import { z } from 'zod';
-import { FourDevsClient } from '../api/client.js';
-import { gerarCnhSchema, GerarCnhInput } from '../schemas/tool-schemas.js';
+import { FourDevsApi } from '../api/types.js';
+import { requireText } from './api-response.js';
+import { gerarCnhSchema } from '../schemas/tool-schemas.js';
 
 /**
  * Tool: Generate Brazilian CNH (driver's license) number
@@ -17,7 +17,7 @@ export const gerarCnhTool = {
     required: []
   } as const,
 
-  async execute(client: FourDevsClient, args: unknown) {
+  async execute(client: FourDevsApi, args: unknown) {
     console.error('[Tool] Executing gerar_cnh...');
     
     // Validate input (empty object expected)
@@ -25,11 +25,9 @@ export const gerarCnhTool = {
     
     // Call API
     const result = await client.gerarCnh();
+    const cnhNumber = requireText(result);
     
     console.error('[Tool] CNH generated successfully');
-    
-    // Handle both string and object responses
-    const cnhNumber = typeof result === 'string' ? result.trim() : String(result).trim();
     
     return {
       content: [

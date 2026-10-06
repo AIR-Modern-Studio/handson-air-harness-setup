@@ -1,5 +1,6 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -8,6 +9,7 @@ import {
   Tool
 } from '@modelcontextprotocol/sdk/types.js';
 import { FourDevsClient } from './api/client.js';
+import { FourDevsApi } from './api/types.js';
 import { gerarPessoaTool } from './tools/gerar-pessoa.js';
 import { carregarCidadesTool } from './tools/carregar-cidades.js';
 import { geradorCertidaoTool } from './tools/gerador-certidao.js';
@@ -24,9 +26,9 @@ import { readmeResource } from './resources/readme-resource.js';
  */
 export class FourDevsServer {
   private server: Server;
-  private client: FourDevsClient;
+  private client: FourDevsApi;
 
-  constructor() {
+  constructor(client: FourDevsApi = new FourDevsClient()) {
     console.error('[Setup] Initializing 4Devs MCP Server...');
     
     this.server = new Server(
@@ -42,7 +44,7 @@ export class FourDevsServer {
       }
     );
 
-    this.client = new FourDevsClient();
+    this.client = client;
     this.setupHandlers();
     this.setupErrorHandling();
     
@@ -128,25 +130,28 @@ export class FourDevsServer {
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       console.error(`[Server] Tool call requested: ${request.params.name}`);
       
+      // Clients may omit arguments for tools without required parameters
+      const args = request.params.arguments ?? {};
+      
       try {
         switch (request.params.name) {
           case gerarPessoaTool.name:
-            return await gerarPessoaTool.execute(this.client, request.params.arguments);
+            return await gerarPessoaTool.execute(this.client, args);
           
           case carregarCidadesTool.name:
-            return await carregarCidadesTool.execute(this.client, request.params.arguments);
+            return await carregarCidadesTool.execute(this.client, args);
           
           case geradorCertidaoTool.name:
-            return await geradorCertidaoTool.execute(this.client, request.params.arguments);
+            return await geradorCertidaoTool.execute(this.client, args);
           
           case gerarCnhTool.name:
-            return await gerarCnhTool.execute(this.client, request.params.arguments);
+            return await gerarCnhTool.execute(this.client, args);
           
           case gerarPisTool.name:
-            return await gerarPisTool.execute(this.client, request.params.arguments);
+            return await gerarPisTool.execute(this.client, args);
           
           case gerarTituloEleitorTool.name:
-            return await gerarTituloEleitorTool.execute(this.client, request.params.arguments);
+            return await gerarTituloEleitorTool.execute(this.client, args);
           
           default:
             throw new Error(`Unknown tool: ${request.params.name}`);
@@ -176,18 +181,24 @@ export class FourDevsServer {
       console.error('[Error] Server error:', error);
     };
 
-    process.on('SIGINT', async () => {
+    // SIGTERM is what `docker stop` sends; as PID 1 in the container, Node ignores it unless handled
+    const shutdown = async () => {
       console.error('[Server] Shutting down...');
       await this.server.close();
       process.exit(0);
-    });
+    };
+    process.on('SIGINT', shutdown);
+    process.on('SIGTERM', shutdown);
+  }
+
+  async connect(transport: Transport): Promise<void> {
+    await this.server.connect(transport);
   }
 
   async run(): Promise<void> {
     console.error('[Server] Starting server with stdio transport...');
     
-    const transport = new StdioServerTransport();
-    await this.server.connect(transport);
+    await this.connect(new StdioServerTransport());
     
     console.error('[Server] Server running and ready to accept requests');
   }

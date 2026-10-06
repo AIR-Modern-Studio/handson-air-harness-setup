@@ -1,6 +1,6 @@
-import { z } from 'zod';
-import { FourDevsClient } from '../api/client.js';
-import { gerarTituloEleitorSchema, GerarTituloEleitorInput } from '../schemas/tool-schemas.js';
+import { FourDevsApi } from '../api/types.js';
+import { requireText } from './api-response.js';
+import { gerarTituloEleitorSchema, GerarTituloEleitorInput, brazilianUFs } from '../schemas/tool-schemas.js';
 
 /**
  * Tool: Generate Brazilian voter registration number
@@ -27,26 +27,27 @@ export const gerarTituloEleitorTool = {
     required: []
   } as const,
 
-  async execute(client: FourDevsClient, args: unknown) {
+  async execute(client: FourDevsApi, args: unknown) {
     console.error('[Tool] Executing gerar_titulo_eleitor...');
     
     // Validate input
     const validatedArgs = gerarTituloEleitorSchema.parse(args) as GerarTituloEleitorInput;
     
+    // Without a UF the API answers with an invalid number, so draw one as the description promises
+    const estado = validatedArgs.estado ?? brazilianUFs[Math.floor(Math.random() * brazilianUFs.length)];
+    
     // Call API
-    const result = await client.gerarTituloEleitor(validatedArgs);
+    const result = await client.gerarTituloEleitor({ estado });
+    const tituloNumber = requireText(result);
     
     console.error('[Tool] Voter registration generated successfully');
-    
-    // Handle both string and object responses
-    const tituloNumber = typeof result === 'string' ? result.trim() : String(result).trim();
     
     return {
       content: [
         {
           type: 'text' as const,
           text: JSON.stringify({
-            estado: validatedArgs.estado || 'random',
+            estado,
             titulo_eleitor: tituloNumber
           }, null, 2)
         }

@@ -1,6 +1,4 @@
 import axios, { AxiosInstance } from 'axios';
-import FormData from 'form-data';
-import https from 'https';
 import {
   GeradorPessoaRequest,
   GeradorPessoaResponse,
@@ -13,53 +11,114 @@ import {
   GeradorPisRequest,
   GeradorPisResponse,
   GeradorTituloEleitorRequest,
-  GeradorTituloEleitorResponse
+  GeradorTituloEleitorResponse,
+  FourDevsApi
 } from './types.js';
+
+/**
+ * Create the axios instance used to talk to the 4Devs API.
+ * TLS certificates are verified (Node default); behind a TLS-inspecting
+ * proxy, trust the corporate CA with NODE_EXTRA_CA_CERTS instead.
+ */
+export function createHttpClient(): AxiosInstance {
+  const client = axios.create({
+    baseURL: 'https://www.4devs.com.br',
+    timeout: 30000, // 30 seconds timeout
+    headers: {
+      'User-Agent': '4devs-mcp-server/1.0.0'
+    }
+  });
+
+  // Add request interceptor for logging
+  client.interceptors.request.use(
+    (config) => {
+      console.error(`[API] Request to ${config.url}`);
+      return config;
+    },
+    (error) => {
+      console.error('[API] Request error:', error.message);
+      return Promise.reject(error);
+    }
+  );
+
+  // Add response interceptor for logging
+  client.interceptors.response.use(
+    (response) => {
+      console.error(`[API] Response status: ${response.status}`);
+      return response;
+    },
+    (error) => {
+      console.error('[API] Response error:', error.message);
+      return Promise.reject(error);
+    }
+  );
+
+  return client;
+}
+
+// Combining marks for accented-letter entities such as &ccedil; and &atilde;
+const entityAccents: Record<string, string> = {
+  acute: '\u0301', grave: '\u0300', circ: '\u0302', tilde: '\u0303', uml: '\u0308', cedil: '\u0327'
+};
+const namedEntities: Record<string, string> = {
+  nbsp: ' ', amp: '&', quot: '"', apos: "'", lt: '<', gt: '>', ndash: '\u2013', mdash: '\u2014'
+};
+
+/**
+ * Decode the HTML entities found in error pages: numeric, accented letters and the common named ones.
+ * A single pass, so decoded text is never decoded again (&#38;lt; stays &lt;).
+ */
+function decodeHtmlEntities(text: string): string {
+  return text
+    .replace(/&(?:#(\d+)|#x([0-9a-f]+)|([a-z])(acute|grave|circ|tilde|uml|cedil)|([a-z]+));/gi,
+      (entity, decimal, hex, letter, accent, name) => {
+        if (decimal) return safeFromCodePoint(Number(decimal)) ?? entity;
+        if (hex) return safeFromCodePoint(parseInt(hex, 16)) ?? entity;
+        if (letter) return letter + entityAccents[accent.toLowerCase()];
+        return namedEntities[name.toLowerCase()] ?? entity;
+      })
+    .normalize('NFC');
+}
+
+function safeFromCodePoint(code: number): string | undefined {
+  return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : undefined;
+}
+
+/**
+ * Build a short, readable message from a failed API call: HTTP status plus
+ * up to 200 characters of the body as plain text (no tags, scripts or styles)
+ */
+export function formatApiError(error: { message: string; response?: { status: number; data?: unknown } }): string {
+  if (!error.response) {
+    return `4Devs API error: ${error.message}`;
+  }
+
+  const { status, data } = error.response;
+  const body = data === null || data === undefined ? '' : typeof data === 'string' ? data : JSON.stringify(data);
+  const text = decodeHtmlEntities(
+    body
+      .replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, ' ')
+      .replace(/<[^<>]*>/g, ' ') // stops at the next <, so unclosed tags stay linear
+  )
+    .replace(/[\p{Cc}\p{Cf}\p{Cs}]/gu, ' ') // control, bidi/format and lone surrogate characters
+    .replace(/[<>]/g, '') // decoded &lt;/&gt; must not bring tags back
+    .replace(/\s+/g, ' ')
+    .trim();
+  const detail = Array.from(text).slice(0, 200).join(''); // by code point, never splitting a surrogate pair
+
+  return detail ? `4Devs API error: HTTP ${status} - ${detail}` : `4Devs API error: HTTP ${status}`;
+}
 
 /**
  * Client for interacting with the 4Devs API
  * All requests use multipart/form-data encoding
  */
-export class FourDevsClient {
-  private readonly baseURL = 'https://www.4devs.com.br';
+export class FourDevsClient implements FourDevsApi {
   private readonly endpoint = '/ferramentas_online.php';
   private readonly client: AxiosInstance;
 
   constructor() {
-    this.client = axios.create({
-      baseURL: this.baseURL,
-      timeout: 30000, // 30 seconds timeout
-      headers: {
-        'User-Agent': '4devs-mcp-server/1.0.0'
-      },
-      httpsAgent: new https.Agent({
-        rejectUnauthorized: false // Allow self-signed certificates
-      })
-    });
-
-    // Add request interceptor for logging
-    this.client.interceptors.request.use(
-      (config) => {
-        console.error(`[API] Request to ${config.url}`);
-        return config;
-      },
-      (error) => {
-        console.error('[API] Request error:', error.message);
-        return Promise.reject(error);
-      }
-    );
-
-    // Add response interceptor for logging
-    this.client.interceptors.response.use(
-      (response) => {
-        console.error(`[API] Response status: ${response.status}`);
-        return response;
-      },
-      (error) => {
-        console.error('[API] Response error:', error.message);
-        return Promise.reject(error);
-      }
-    );
+    this.client = createHttpClient();
   }
 
   /**
@@ -84,18 +143,15 @@ export class FourDevsClient {
     try {
       const formData = this.createFormData(data);
       
+      // Native FormData: axios sets the multipart Content-Type and boundary itself
       const response = await this.client.post<T>(this.endpoint, formData, {
-        headers: {
-          ...formData.getHeaders()
-        },
         responseType: responseType as any
       });
 
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const message = error.response?.data || error.message;
-        throw new Error(`4Devs API error: ${message}`);
+        throw new Error(formatApiError(error));
       }
       throw error;
     }
@@ -122,7 +178,7 @@ export class FourDevsClient {
       acao: 'carregar_cidades',
       ...params
     };
-    return this.post<CarregarCidadesResponse>(request);
+    return this.post<CarregarCidadesResponse>(request, 'text');
   }
 
   /**
