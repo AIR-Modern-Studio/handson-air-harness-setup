@@ -1,0 +1,48 @@
+{
+  "name": "4devs-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP Server for 4Devs Brazilian document generation API - Generate valid CPF, RG, CNH, PIS, birth certificates, and voter registration numbers",
+  "type": "module",
+  "main": "./build/index.js",
+  "bin": {
+    "4devs-mcp-server": "./build/index.js"
+  },
+  "private": true,
+  "scripts": {
+    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
+    "prepare": "npm run build",
+    "start": "node build/index.js",
+    "dev": "node --watch --import tsx src/index.ts",
+    "inspector": "npx @modelcontextprotocol/inspector build/index.js",
+    "pretest": "node -e \"require('fs').rmSync('build-test', { recursive: true, force: true })\"",
+    "test": "tsc -p tsconfig.test.json && node --test \"build-test/test/**/*.test.js\""
+  },
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "4devs",
+    "brazilian-documents",
+    "cpf",
+    "rg",
+    "cnh",
+    "pis",
+    "certidao",
+    "titulo-eleitor",
+    "document-generator",
+    "brazil"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "axios": "^1.7.9",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.23.15",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

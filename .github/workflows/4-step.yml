@@ -5,11 +5,11 @@ on:
     branches:
       - main
     paths:
-      - 'projeto/.claude/**'
-      - 'projeto/.kiro/**'
-      - 'projeto/.github/instructions/**'
-      - 'projeto/.github/prompts/**'
-      - 'projeto/.aicockpit/**'
+      - '4devs-mcp-server/.claude/**'
+      - '4devs-mcp-server/.kiro/**'
+      - '4devs-mcp-server/.github/instructions/**'
+      - '4devs-mcp-server/.github/prompts/**'
+      - '4devs-mcp-server/.aicockpit/**'
 
 permissions:
   contents: read

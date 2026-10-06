@@ -9,7 +9,7 @@ harness/MANIFEST.json e confere o trabalho do passo.
 
 Escreve em $GITHUB_OUTPUT:
   vars    YAML com step_number, results_table, tips, agent, agent_label,
-          lang, package_dir, code_dir, open_hint, pointer_note,
+          lang, package_dir, code_dir, open_hint, work_hint, pointer_note,
           doc_constitution, doc_review_contract, doc_review_examples,
           doc_architecture, doc_pr_template, doc_docs_index, rule_area_path,
           rule_area_load, rule_task_path, rule_task_load, scope_hint,
@@ -30,9 +30,16 @@ CONFIG = json.loads((ROOT / ".github" / "handson.json").read_text(encoding="utf-
 CODE_DIR = CONFIG["code_dir"]
 CODE = ROOT / CODE_DIR
 
+def work_hint(cli: str | None, ide: str) -> str:
+    """Como abrir o agente dentro de CODE_DIR (passo 6): bullets dentro de um item de lista numerada."""
+    options = ([f"- **Pela CLI:** no terminal, entre na pasta (`cd {CODE_DIR}`) e {cli}."] if cli else [])
+    options.append(f"- **Pela IDE:** {ide}.")
+    return "\n   ".join(options)
+
+
 # Onde cada agente guarda o que a skill escreve no projeto, e os textos por
-# agente que os templates de .github/steps/ usam (open_hint, rule_area_load,
-# rule_task_load, scope_hint). scope_glob_key é a chave do frontmatter com os
+# agente que os templates de .github/steps/ usam (open_hint, work_hint,
+# rule_area_load, rule_task_load, scope_hint). scope_glob_key é a chave do frontmatter com os
 # globs de escopo de uma rule de área.
 AGENTS = {
     "claude-code": {
@@ -41,7 +48,10 @@ AGENTS = {
         "rule_globs": [".claude/rules/air-*.md"],
         "task_globs": [".claude/commands/air-*.md", ".claude/skills/air-*/SKILL.md"],
         "scope_key": "paths:",
-        "open_hint": "Abra um terminal na raiz do repositório (a pasta-mãe) e inicie o Claude Code com `claude`.",
+        "open_hint": "Abra um terminal na **pasta-mãe** (raiz do repositório) e inicie o Claude Code com `claude`. "
+                     "Se preferir a IDE, abra a pasta-mãe na sua IDE de preferência e use a extensão do Claude Code.",
+        "work_hint": work_hint("inicie o Claude Code com `claude`",
+                               f"abra a pasta `{CODE_DIR}/` na sua IDE de preferência e use a extensão do Claude Code"),
         "scope_glob_key": "paths",
         "rule_area_load": "Carrega sozinha quando você trabalha nos caminhos do `paths:` do frontmatter",
         "rule_task_load": "Você invoca: `/air-<nome>`",
@@ -56,6 +66,8 @@ AGENTS = {
         "scope_key": "inclusion:",
         "open_hint": "No Kiro, abra a **pasta-mãe** (raiz do repositório) com **File → Open Folder**. "
                      "Se preferir a CLI, abra o terminal na pasta-mãe e inicie o Kiro CLI.",
+        "work_hint": work_hint("inicie o Kiro CLI",
+                               f"abra a pasta `{CODE_DIR}/` no Kiro IDE com **File → Open Folder**"),
         "scope_glob_key": "fileMatchPattern",
         "rule_area_load": "Carrega sozinha quando você trabalha nos caminhos do `fileMatchPattern:` (`inclusion: fileMatch`)",
         "rule_task_load": "Com `inclusion: manual`, você invoca: `#air-<nome>`",
@@ -68,8 +80,11 @@ AGENTS = {
         "rule_globs": [".github/instructions/air-*.instructions.md"],
         "task_globs": [".github/prompts/air-*.prompt.md"],
         "scope_key": "applyTo:",
-        "open_hint": "No VS Code, abra a **pasta-mãe** (raiz do repositório) com **File → Open Folder**. "
-                     "Depois abra o Copilot Chat e selecione o modo **Agent**.",
+        "open_hint": "Na sua IDE de preferência, abra a **pasta-mãe** (raiz do repositório), "
+                     "depois abra o Copilot Chat e selecione o modo **Agent**. "
+                     "Se preferir a CLI, abra o terminal na pasta-mãe e inicie o GitHub Copilot CLI.",
+        "work_hint": work_hint("inicie o GitHub Copilot CLI",
+                               f"abra a pasta `{CODE_DIR}/` na sua IDE de preferência e use o Copilot Chat no modo **Agent**"),
         "scope_glob_key": "applyTo",
         "rule_area_load": "Carrega sozinha quando você trabalha nos caminhos do `applyTo:` do frontmatter",
         "rule_task_load": "Você invoca: `/air-<nome>`",
@@ -82,8 +97,12 @@ AGENTS = {
         "rule_globs": [".aicockpit/rules/air-*.md"],
         "task_globs": [".aicockpit/workflows/air-*.md"],
         "scope_key": None,
-        "open_hint": "No VS Code, abra a **pasta-mãe** (raiz do repositório) com **File → Open Folder**. "
-                     "Depois abra o painel do AI/C Reasoning e inicie uma conversa nova.",
+        "open_hint": "Na sua IDE de preferência, abra a **pasta-mãe** (raiz do repositório), "
+                     "depois abra o painel do AI/C Reasoning e inicie uma conversa nova. "
+                     "Se preferir a CLI, abra o terminal na pasta-mãe e inicie a CLI do AI/C Reasoning.",
+        "work_hint": work_hint("inicie a CLI do AI/C Reasoning",
+                               f"abra a pasta `{CODE_DIR}/` na sua IDE de preferência, "
+                               "depois abra o painel do AI/C Reasoning e inicie uma conversa nova"),
         "scope_glob_key": None,
         "rule_area_load": "Sem escopo: a pasta `rules/` carrega inteira, em toda sessão",
         "rule_task_load": "Você invoca: `/air-<nome>.md`",
@@ -480,7 +499,48 @@ def step6(info: dict, results: list, tips: list) -> None:
     if not harness_changes:
         tips.append("Ajuste o `AGENTS.md`, uma rule `air-*` ou outro documento do harness que já existia "
                     "com o que você aprendeu na tarefa, e envie no mesmo push.")
-    # TODO(projeto-base): verificação específica da tarefa (testes, arquivo esperado…)
+
+    # Tarefa A: test-tools.js; Tarefa B: dependências vulneráveis.
+    test_tools = f"{CODE_DIR}/test-tools.js" in diff
+    results.append({"description": "Tarefa A: `test-tools.js` corrigido neste push", "passed": test_tools})
+    if not test_tools:
+        tips.append(f"Não encontrei alteração em `{CODE_DIR}/test-tools.js` neste push. "
+                    "A Tarefa A é deixar o resultado dele confiável.")
+    lockfile = f"{CODE_DIR}/package-lock.json" in diff
+    results.append({"description": "Tarefa B: `package-lock.json` atualizado neste push", "passed": lockfile})
+    if not lockfile:
+        tips.append(f"Não encontrei alteração em `{CODE_DIR}/package-lock.json` neste push. "
+                    "Atualizar dependências muda o lockfile, e ele vai no mesmo commit.")
+    vulnerable = audit_fixable(("high", "critical"))
+    if vulnerable is None:
+        results.append({"description": "Tarefa B: auditoria de dependências (`npm audit`) não pôde rodar",
+                        "passed": True})
+        tips.append("Não consegui rodar o `npm audit` nesta verificação, então ela não bloqueia o passo. "
+                    f"Confira na sua máquina com `npm audit --audit-level=high` dentro de `{CODE_DIR}/`.")
+    else:
+        results.append({
+            "description": "Tarefa B: nenhuma vulnerabilidade alta ou crítica com correção disponível"
+                           + (f" ({len(vulnerable)} encontrada(s))" if vulnerable else ""),
+            "passed": not vulnerable,
+        })
+        if vulnerable:
+            tips.append("O `npm audit` ainda aponta, com correção disponível: "
+                        + ", ".join(f"`{name}`" for name in vulnerable[:5])
+                        + f". Rode `npm audit` dentro de `{CODE_DIR}/` e peça ao agente para atualizar.")
+
+
+def audit_fixable(severities: tuple[str, ...]) -> list[str] | None:
+    """Pacotes com vulnerabilidade nas severidades dadas e correção disponível; None se o npm audit não rodar."""
+    try:
+        out = subprocess.run(["npm", "audit", "--package-lock-only", "--json"], cwd=CODE,
+                             capture_output=True, text=True, check=False, timeout=120).stdout
+        report = json.loads(out)
+    except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError):
+        return None
+    if "vulnerabilities" not in report:
+        return None  # ex.: lockfile ausente ou erro de rede; o JSON traz só "error"
+    return sorted(name for name, v in report["vulnerabilities"].items()
+                  if v.get("severity") in severities and v.get("fixAvailable"))
 
 
 def main() -> int:
@@ -516,6 +576,8 @@ def main() -> int:
         "package_dir": rel(info["package_dir"]),
         "code_dir": CODE_DIR,
         "open_hint": spec.get("open_hint", "Abra o seu agente na **pasta-mãe** (raiz do repositório)."),
+        "work_hint": spec.get("work_hint", work_hint("inicie o seu agente",
+                                                     f"abra a pasta `{CODE_DIR}/` na IDE em que você usa o agente")),
         "pointer_note": pointer_note,
         **{f"doc_{kind.replace('-', '_')}": docs.get(kind, "") for kind in DOC_KINDS},
         "rule_area_path": rule_paths.get("rule-area", ""),
