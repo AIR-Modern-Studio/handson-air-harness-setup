@@ -25,17 +25,17 @@ A instalação acontece numa sessão à parte das sessões em que você trabalha
 
 ### ⌨️ Atividade: Disparar a skill
 
-1. Envie o gatilho abaixo ao agente. **Só a primeira linha é obrigatória**, e ela já vem preenchida. *Sobre o projeto* e *Documentos que ajudam* são opcionais: preencha com as suas palavras para adiantar a entrevista, ou apague. O que ficar de fora, a skill pergunta.
+1. Envie o gatilho abaixo ao agente, já preenchido. *Sobre o projeto* resume o projeto e avisa o agente que o `README.md` e a pasta `.github/` da raiz são o roteiro deste hands-on: sem esse aviso, ele pode se guiar pelo exercício em vez da skill. O que o gatilho não disser, a skill pergunta.
 
    ```text
    Leia `{{ package_dir }}/harness/skills/air-harness-setup/SKILL.md` e instale o harness no projeto `{{ code_dir }}`.
 
-   Sobre o projeto: <o que é, para quem, stack principal, o que já existe de configuração de agente, o que o agente costuma errar aqui — em poucas linhas>
-
-   Documentos que ajudam: <anexe ou aponte os caminhos — README, documento de arquitetura, ADRs, guia de contribuição, padrões do time>
+   Sobre o projeto: servidor MCP em TypeScript/Node que gera dados brasileiros fictícios para teste (pessoas, CPF, CNH, PIS…) chamando o site 4Devs. O `README.md` e a pasta `.github/` da raiz são o roteiro deste hands-on, não fazem parte do projeto: ignore os dois.
    ```
 
 1. Confirme a pasta do projeto quando a skill perguntar (`{{ code_dir }}`).
+
+   > ❕ **Importante:** as respostas do agente nem sempre são determinísticas. A conversa pode ter alguns passos a mais do que os descritos aqui, como uma pergunta ou uma confirmação extra: responda e siga normalmente.
 
 1. Responda sobre a documentação: se o projeto tiver alguma, aponte onde está; se não tiver, diga que não há.
 
@@ -43,7 +43,7 @@ A instalação acontece numa sessão à parte das sessões em que você trabalha
 
 1. Responda às perguntas da entrevista.
 
-1. Quando a skill apresentar o rascunho do `AGENTS.md` (e do arquivo de ponteiro, se o seu agente usar um), abra no editor e leia. Peça ajustes até ficar com a cara do projeto, e então aprove.
+1. Quando a skill apresentar o rascunho do `AGENTS.md` (e do arquivo de ponteiro, se o seu agente usar um), abra no editor e leia. Nem sempre o agente mostra o rascunho na tela, principalmente no CLI: os arquivos estão em `{{ package_dir }}/runs/{{ code_dir }}/draft/`. Peça ajustes até ficar com a cara do projeto, e então aprove.
 
    > ❕ **Importante:** na skill, nada é obrigatório. A obrigação é dela: depois de ler o projeto, ela sempre propõe o `AGENTS.md`, mesmo que conclua que nada mais é necessário. Aprovar, ajustar ou recusar cada documento é decisão sua.
 
