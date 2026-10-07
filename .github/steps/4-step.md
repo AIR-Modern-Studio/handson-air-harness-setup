@@ -49,7 +49,7 @@ A pergunta que separa as duas é **o que faz a rule carregar**. Se é "sempre qu
 
 1. Nas rules que quiser, leia o rascunho, confira o escopo e o nome, peça ajustes e aprove. Nem sempre o agente mostra o rascunho na tela, principalmente no CLI: os arquivos estão em `{{ package_dir }}/runs/{{ code_dir }}/draft/`. Escolha **pelo menos uma**.
 
-1. Quando a skill passar para a espinha revisada e a verificação, avise que vai parar por aqui: o fechamento fica para o Passo 5. Confira que o andamento ficou registrado em `{{ package_dir }}/runs/{{ code_dir }}/STATE.md`.
+1. Quando a skill passar para a espinha revisada e a verificação, avise que vai parar por aqui: o fechamento fica para o Passo 5. Confira que o andamento ficou registrado em `{{ package_dir }}/runs/{{ code_dir }}/STATE.md`. Se a skill seguir direto para a verificação e a entrega, sem dar tempo de parar, tudo bem: commite tudo neste passo. No Passo 5 você confere o resultado e registra a conclusão.
 
 1. Faça o commit na `main`, incluindo `runs/`, e envie (push):
 

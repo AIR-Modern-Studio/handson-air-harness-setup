@@ -2,7 +2,7 @@
 
 As rules estão gravadas. Falta a skill fechar a instalação: rever a espinha, conferir a sessão inteira e mostrar o que ficou onde.
 
-**Objetivo deste passo:** concluir a instalação e commitar o resultado. A verificação confere que a espinha continua com as oito seções, que o arquivo de ponteiro (se o seu agente usar um) carrega a espinha, que nada de `runs/` foi parar no projeto e que o andamento ficou registrado em `STATE.md`.
+**Objetivo deste passo:** concluir a instalação e commitar o resultado. A verificação confere que a espinha continua com as oito seções, que o arquivo de ponteiro (se o seu agente usar um) carrega a espinha, que nada de `runs/` foi parar no projeto e que o fechamento ficou registrado: o `STATE.md` atualizado neste passo ou, se o fechamento não precisou de nenhuma alteração, a conclusão registrada em `DECISIONS.md`, com o `STATE.md` e o `PLAN.md` concluídos.
 
 ### 📖 A espinha revisada
 
@@ -42,6 +42,19 @@ No fim, a skill mostra o que foi escrito, onde ficou e como chega ao agente; o q
 1. Leia a entrega e compare com o que você aprovou. Anote o que ficou em aberto.
 
    > ❕ **Importante:** se quiser incluir algo além do proposto (um servidor MCP, uma skill do time, uma regra de segurança), peça **agora**, durante a sessão de instalação. A skill não fica no projeto depois.
+
+1. O fechamento pode não alterar nenhum arquivo: quando nada saiu da espinha e a verificação passou, ou quando a skill já fechou a instalação no Passo 4. Se o `git status` não mostrar nenhuma alteração, confira se o agente está certo antes de seguir:
+
+   - a verificação passou em todos os itens da lista acima, sem nada para corrigir;
+   - o `STATE.md` e o `PLAN.md`, em `{{ package_dir }}/runs/{{ code_dir }}/`, não têm nenhum item pendente.
+
+   Se estiver tudo certo, peça para registrar a conclusão:
+
+   ```text
+   Conferi a verificação e a entrega da instalação do harness em `{{ code_dir }}`, e estão corretas: a instalação está concluída e não precisa de nenhuma alteração. Registre essa decisão em `{{ package_dir }}/runs/{{ code_dir }}/DECISIONS.md`. Confira também se o `STATE.md` e o `PLAN.md` dessa pasta marcam a instalação como concluída e, se não marcarem, atualize. Não altere nada dentro de `{{ code_dir }}/`.
+   ```
+
+   > ❕ **Importante:** a verificação deste passo procura essa decisão no `DECISIONS.md` e confere se o `STATE.md` e o `PLAN.md` marcam a instalação como concluída.
 
 1. Antes do commit, revise o diff (`git status` e `git diff`): ele é a palavra final sobre o que mudou.
 

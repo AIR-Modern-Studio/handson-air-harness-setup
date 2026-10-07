@@ -28,7 +28,7 @@ O agente de código começa cada conversa sabendo só o que os documentos do pro
 | 2 · A espinha | A skill lê o projeto, entrevista você e propõe o `AGENTS.md` | `4devs-mcp-server/AGENTS.md` |
 | 3 · Os demais documentos | Constitution, review, arquitetura e outros, um por vez: você aprova, ajusta ou dispensa | Decisões em `DECISIONS.md` |
 | 4 · Rules sob medida | A skill propõe rules de área e playbooks a partir do projeto | Pelo menos uma rule `air-*` |
-| 5 · Fechar a instalação | A skill revisa a espinha, verifica a sessão e mostra o que ficou onde | Andamento registrado em `STATE.md` |
+| 5 · Fechar a instalação | A skill revisa a espinha, verifica a sessão e mostra o que ficou onde | Fechamento registrado em `STATE.md` ou `DECISIONS.md` |
 | 6 · Usar o harness | Uma tarefa real com o agente; o que ele errar vira ajuste num documento | Um documento do harness ajustado |
 
 A cada push na `main`, uma verificação automática responde na issue e libera o passo seguinte.
