@@ -15,7 +15,7 @@ permissions:
 jobs:
   find_exercise:
     if: |
-      !github.event.repository.is_template
+      !github.event.repository.is_template && !github.event.created
     name: Encontrar a issue do exercício
     uses: skills/exercise-toolkit/.github/workflows/find-exercise-issue.yml@v0.9.3
     with:
@@ -64,6 +64,8 @@ jobs:
         env:
           BEFORE_SHA: ${{ github.event.before }}
           AFTER_SHA: ${{ github.sha }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
         run: python3 .github/scripts/check_step.py 6
 
       - name: Comentário - resultado do passo

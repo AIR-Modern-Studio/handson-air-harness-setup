@@ -10,6 +10,7 @@ on:
       - '4devs-mcp-server/.github/instructions/**'
       - '4devs-mcp-server/.github/prompts/**'
       - '4devs-mcp-server/.aicockpit/**'
+      - '**/runs/**'
 
 permissions:
   contents: read

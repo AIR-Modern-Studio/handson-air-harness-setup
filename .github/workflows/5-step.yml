@@ -5,7 +5,11 @@ on:
     branches:
       - main
     paths:
-      - '**/runs/**/STATE.md'
+      - '**/runs/**'
+      - '**/STATE.md'
+      - '4devs-mcp-server/AGENTS.md'
+      - '4devs-mcp-server/CLAUDE.md'
+      - '4devs-mcp-server/.github/copilot-instructions.md'
 
 permissions:
   contents: read
@@ -59,6 +63,8 @@ jobs:
         env:
           BEFORE_SHA: ${{ github.event.before }}
           AFTER_SHA: ${{ github.sha }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
         run: python3 .github/scripts/check_step.py 5
 
       - name: Comentário - resultado do passo

@@ -7,6 +7,14 @@ Lê .github/handson.json, identifica o pacote do AI/R Harness Setup extraído
 na pasta-mãe (raiz deste repositório), descobre agente e idioma pelo
 harness/MANIFEST.json e confere o trabalho do passo.
 
+Os passos que olham alterações (3, 5 e 6) comparam com o commit em que o passo
+começou, não só com o push atual: um push de correção não apaga o que veio
+antes. Lê do ambiente:
+  AFTER_SHA       commit verificado (padrão: HEAD)
+  BEFORE_SHA      commit anterior ao push; só se o início do passo não for achado
+  STEP_BASE_SHA   início do passo, se já conhecido (testes locais); sem ele, o
+                  início vem do `gh run list` (GH_TOKEN) — ver step_base()
+
 Escreve em $GITHUB_OUTPUT:
   vars    YAML com step_number, results_table, tips, agent, agent_label,
           lang, package_dir, code_dir, open_hint, work_hint, pointer_note,
@@ -347,16 +355,16 @@ def step2(info: dict, results: list, tips: list) -> None:
 
 
 def step3(info: dict, results: list, tips: list) -> None:
-    diff, _ = changed_files()
+    diff, _ = changed_files(3, tips)
     package = rel(info["package_dir"])
     decisions = [f for f in diff
                  if package and f.startswith(f"{package}/runs/") and f.endswith("/DECISIONS.md")]
     results.append({
-        "description": "Decisões sobre os documentos registradas (`runs/<projeto>/DECISIONS.md` atualizado neste push)",
+        "description": "Decisões sobre os documentos registradas (`runs/<projeto>/DECISIONS.md` atualizado neste passo)",
         "passed": bool(decisions),
     })
     if not decisions:
-        tips.append("Não encontrei alteração no `DECISIONS.md` neste push. É lá que a skill registra cada decisão, "
+        tips.append("Não encontrei alteração no `DECISIONS.md` neste passo. É lá que a skill registra cada decisão, "
                     "inclusive o motivo de cada documento dispensado. Faça o commit incluindo a pasta `runs/` do pacote.")
     entries = manifest_entries(info, DOC_KINDS)
     found = []  # um caminho por documento: o primeiro que existe, entre as variantes
@@ -422,29 +430,54 @@ def step4(info: dict, results: list, tips: list) -> None:
     })
 
 
-def changed_files() -> tuple[list[str], list[str]]:
-    """Arquivos alterados neste push e arquivos que já existiam antes dele."""
-    before = os.environ.get("BEFORE_SHA", "")
+def step_base(step: int, tips: list) -> str:
+    """Commit em que o passo começou: o da última execução aprovada do workflow do passo anterior.
+
+    Aprovado, o workflow do passo anterior termina com sucesso e se desabilita,
+    então o histórico do Actions guarda esse commit. É a memória entre um push e
+    outro. Sem ele, cai para o push atual e avisa nas dicas.
+    """
     after = os.environ.get("AFTER_SHA", "HEAD")
-    if not before or set(before) == {"0"}:
-        before = f"{after}~1"
-    diff = subprocess.run(["git", "diff", "--name-only", "--diff-filter=AM", before, after],
+    base = os.environ.get("STEP_BASE_SHA", "")
+    if not base:
+        previous = "0-start-exercise.yml" if step == 1 else f"{step - 1}-step.yml"
+        try:
+            base = subprocess.run(["gh", "run", "list", "--workflow", previous, "--branch", "main",
+                                   "--status", "success", "--limit", "1",
+                                   "--json", "headSha", "--jq", ".[0].headSha // empty"],
+                                  capture_output=True, text=True, check=False, timeout=60).stdout.strip()
+        except (OSError, subprocess.TimeoutExpired):
+            base = ""
+    if base and subprocess.run(["git", "cat-file", "-e", f"{base}^{{commit}}"],
+                               capture_output=True, check=False).returncode == 0:
+        return base
+    tips.append("Não consegui identificar o commit em que este passo começou, "
+                "então conferi só as alterações deste push.")
+    before = os.environ.get("BEFORE_SHA", "")
+    return before if before and set(before) != {"0"} else f"{after}~1"
+
+
+def changed_files(step: int, tips: list) -> tuple[list[str], list[str]]:
+    """Arquivos alterados desde o início do passo e arquivos que já existiam nesse início."""
+    base = step_base(step, tips)
+    after = os.environ.get("AFTER_SHA", "HEAD")
+    diff = subprocess.run(["git", "diff", "--name-only", "--diff-filter=AM", base, after],
                           capture_output=True, text=True, check=False).stdout.split()
-    existed = subprocess.run(["git", "ls-tree", "-r", "--name-only", before],
+    existed = subprocess.run(["git", "ls-tree", "-r", "--name-only", base],
                              capture_output=True, text=True, check=False).stdout.split()
     return diff, existed
 
 
 def step5(info: dict, results: list, tips: list) -> None:
-    diff, _ = changed_files()
+    diff, _ = changed_files(5, tips)
     package = rel(info["package_dir"])
     state = [f for f in diff if package and f.startswith(f"{package}/runs/") and f.endswith("/STATE.md")]
     results.append({
-        "description": "Andamento registrado (`runs/<projeto>/STATE.md` atualizado neste push)",
+        "description": "Andamento registrado (`runs/<projeto>/STATE.md` atualizado neste passo)",
         "passed": bool(state),
     })
     if not state:
-        tips.append("Não encontrei alteração no `STATE.md` neste push. Faça o commit incluindo a pasta `runs/` do pacote.")
+        tips.append("Não encontrei alteração no `STATE.md` neste passo. Faça o commit incluindo a pasta `runs/` do pacote.")
     agents_md = CODE / "AGENTS.md"
     missing = spine_missing(doc_body(agents_md)) if agents_md.is_file() else CONFIG["spine_sections"]
     results.append({
@@ -475,7 +508,7 @@ def step5(info: dict, results: list, tips: list) -> None:
 
 def step6(info: dict, results: list, tips: list) -> None:
     spec = AGENTS.get(info["agent"] or "")
-    diff, existed = changed_files()
+    diff, existed = changed_files(6, tips)
     harness_paths = [f"{CODE_DIR}/AGENTS.md"]
     if spec:
         if spec["pointer"]:
@@ -498,19 +531,19 @@ def step6(info: dict, results: list, tips: list) -> None:
     })
     if not harness_changes:
         tips.append("Ajuste o `AGENTS.md`, uma rule `air-*` ou outro documento do harness que já existia "
-                    "com o que você aprendeu na tarefa, e envie no mesmo push.")
+                    "com o que você aprendeu na tarefa, e envie (push).")
 
     # Tarefa A: test-tools.js; Tarefa B: dependências vulneráveis.
     test_tools = f"{CODE_DIR}/test-tools.js" in diff
-    results.append({"description": "Tarefa A: `test-tools.js` corrigido neste push", "passed": test_tools})
+    results.append({"description": "Tarefa A: `test-tools.js` corrigido neste passo", "passed": test_tools})
     if not test_tools:
-        tips.append(f"Não encontrei alteração em `{CODE_DIR}/test-tools.js` neste push. "
+        tips.append(f"Não encontrei alteração em `{CODE_DIR}/test-tools.js` neste passo. "
                     "A Tarefa A é deixar o resultado dele confiável.")
     lockfile = f"{CODE_DIR}/package-lock.json" in diff
-    results.append({"description": "Tarefa B: `package-lock.json` atualizado neste push", "passed": lockfile})
+    results.append({"description": "Tarefa B: `package-lock.json` atualizado neste passo", "passed": lockfile})
     if not lockfile:
-        tips.append(f"Não encontrei alteração em `{CODE_DIR}/package-lock.json` neste push. "
-                    "Atualizar dependências muda o lockfile, e ele vai no mesmo commit.")
+        tips.append(f"Não encontrei alteração em `{CODE_DIR}/package-lock.json` neste passo. "
+                    "Atualizar dependências muda o lockfile: faça o commit dele também.")
     vulnerable = audit_fixable(("high", "critical"))
     if vulnerable is None:
         results.append({"description": "Tarefa B: auditoria de dependências (`npm audit`) não pôde rodar",

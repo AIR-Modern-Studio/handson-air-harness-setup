@@ -6,6 +6,9 @@ on:
       - main
     paths:
       - '4devs-mcp-server/AGENTS.md'
+      - '4devs-mcp-server/CLAUDE.md'
+      - '4devs-mcp-server/.github/copilot-instructions.md'
+      - '**/runs/**'
 
 permissions:
   contents: read
