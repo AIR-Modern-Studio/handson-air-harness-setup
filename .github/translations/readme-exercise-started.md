@@ -11,7 +11,7 @@ Exercício de {{ login }} · no seu ritmo, pode pausar quando quiser
 </div>
 
 > [!WARNING]
-> **Desligue skills de economia de tokens, como a Caveman, antes de usar o AI/R Harness Setup.** Elas comprimem o jeito de o agente escrever e podem prejudicar a entrevista e os documentos gerados. A skill `air-harness-setup` já cuida do consumo: delega a leitura pesada do projeto e traz só o resumo, grava os rascunhos em arquivo e deixa no chat só o que precisa da sua resposta.
+> **Desligue modos de resposta comprimida durante a instalação.** Se você usa uma skill ou modo que encurta as respostas do agente (o Caveman, por exemplo), desligue antes de colar o gatilho (no Caveman, `/caveman off`) e religue ao terminar. A instalação é feita de validações: em cada uma, o chat mostra só um resumo curto e as perguntas em aberto, e é esse texto que você precisa ler inteiro para aprovar. Os documentos já vão para arquivo, então a economia seria pequena, e o risco é perder uma ressalva.
 
 > [!TIP]
 > **Voltando depois de um tempo?** O passo em que você parou é sempre o último comentário da [issue do exercício]({{ issue_url }}).

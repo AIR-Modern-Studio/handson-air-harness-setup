@@ -23,6 +23,9 @@ A instalação acontece numa sessão à parte das sessões em que você trabalha
 
 1. {{ open_hint | safe }}
 
+   > [!WARNING]
+   > **Desligue modos de resposta comprimida durante a instalação.** Se você usa uma skill ou modo que encurta as respostas do agente (o Caveman, por exemplo), desligue antes de colar o gatilho (no Caveman, `/caveman off`) e religue ao terminar. A instalação é feita de validações: em cada uma, o chat mostra só um resumo curto e as perguntas em aberto, e é esse texto que você precisa ler inteiro para aprovar. Os documentos já vão para arquivo, então a economia seria pequena, e o risco é perder uma ressalva.
+
 ### ⌨️ Atividade: Disparar a skill
 
 1. Envie o gatilho abaixo ao agente, já preenchido. *Sobre o projeto* resume o projeto e avisa o agente que o `README.md` e a pasta `.github/` da raiz são o roteiro deste hands-on: sem esse aviso, ele pode se guiar pelo exercício em vez da skill. O que o gatilho não disser, a skill pergunta.
