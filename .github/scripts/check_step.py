@@ -15,6 +15,9 @@ antes. Lê do ambiente:
   STEP_BASE_SHA   início do passo, se já conhecido (testes locais); sem ele, o
                   início vem do `gh run list` (GH_TOKEN) — ver step_base()
 
+No Passo 5, o fechamento pode não alterar nada: aí vale a conclusão registrada
+no DECISIONS.md, desde que STATE.md e PLAN.md estejam concluídos — ver step5().
+
 Escreve em $GITHUB_OUTPUT:
   vars    YAML com step_number, results_table, tips, agent, agent_label,
           lang, package_dir, code_dir, open_hint, work_hint, pointer_note,
@@ -232,6 +235,36 @@ def doc_body(path: Path) -> str:
 def spine_missing(body: str) -> list[str]:
     found = {m.split("(")[0].strip() for m in re.findall(r"^## +(.+?)\s*$", body, flags=re.M)}
     return [s for s in CONFIG["spine_sections"] if s not in found]
+
+
+# O formato das notas da skill (STATE.md, PLAN.md) é livre e muda por agente:
+# checklist, tabela com emoji, palavra em negrito, texto corrido.
+PENDING = re.compile(r"\[ \]|⬜|🔄|⏳|\b(?:pendente|pending|em andamento|in progress|aguardando|em validação)", re.I)
+DONE = re.compile(r"conclu[íi]d|encerrad|finalizad|\bcomplete|\bfinished\b|\bdone\b", re.I)
+
+
+def item_lines(path: Path) -> list[tuple[int, str]]:
+    """Linhas de tabela ou de checklist, com o número; legendas e texto corrido ficam de fora."""
+    lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    return [(n, s) for n, s in ((n, line.strip()) for n, line in enumerate(lines, 1))
+            if s.startswith("|") or re.match(r"[-*] \[", s)]
+
+
+def unfinished_notes(run_dir: Path) -> list[str]:
+    """O que impede de ler STATE.md e PLAN.md como concluídos; vazio se os dois estão."""
+    out = []
+    for name in ("STATE.md", "PLAN.md"):
+        path = run_dir / name
+        if not path.is_file():
+            out.append(f"`{name}` não encontrado")
+            continue
+        items = item_lines(path)
+        out += [f"`{name}`, linha {n}" for n, s in items if PENDING.search(s)]
+        if name == "PLAN.md" and not items:
+            out.append("`PLAN.md` sem itens")
+        if name == "STATE.md" and not DONE.search(path.read_text(encoding="utf-8", errors="replace")):
+            out.append("`STATE.md` sem registro de conclusão")
+    return out
 
 
 def scope_globs(text: str, key: str) -> list[str]:
@@ -471,13 +504,30 @@ def changed_files(step: int, tips: list) -> tuple[list[str], list[str]]:
 def step5(info: dict, results: list, tips: list) -> None:
     diff, _ = changed_files(5, tips)
     package = rel(info["package_dir"])
-    state = [f for f in diff if package and f.startswith(f"{package}/runs/") and f.endswith("/STATE.md")]
-    results.append({
-        "description": "Andamento registrado (`runs/<projeto>/STATE.md` atualizado neste passo)",
-        "passed": bool(state),
-    })
-    if not state:
-        tips.append("Não encontrei alteração no `STATE.md` neste passo. Faça o commit incluindo a pasta `runs/` do pacote.")
+    notes = [f for f in diff if package and f.startswith(f"{package}/runs/")]
+    state = [f for f in notes if f.endswith("/STATE.md")]
+    decisions = [f for f in notes if f.endswith("/DECISIONS.md")]
+    if state or not decisions:
+        results.append({
+            "description": "Andamento registrado (`runs/<projeto>/STATE.md` atualizado neste passo)",
+            "passed": bool(state),
+        })
+        if not state:
+            tips.append("Não encontrei alteração no `STATE.md` nem no `DECISIONS.md` neste passo. Se o fechamento "
+                        "não precisou de alteração, use o prompt do Passo 5 para registrar a conclusão. "
+                        "Faça o commit incluindo a pasta `runs/` do pacote.")
+    else:
+        # Fechamento sem alteração: só a decisão foi registrada, então o andamento tem de estar concluído.
+        unfinished = unfinished_notes(ROOT / Path(decisions[0]).parent)
+        results.append({
+            "description": "Conclusão registrada (`DECISIONS.md` atualizado neste passo, "
+                           "com `STATE.md` e `PLAN.md` concluídos)",
+            "passed": not unfinished,
+        })
+        if unfinished:
+            tips.append("A conclusão está no `DECISIONS.md`, mas o andamento ainda parece em aberto: "
+                        + ", ".join(unfinished[:5]) + ". Peça ao agente para marcar cada item como concluído, "
+                        "recusado ou não aplicável, e envie de novo.")
     agents_md = CODE / "AGENTS.md"
     missing = spine_missing(doc_body(agents_md)) if agents_md.is_file() else CONFIG["spine_sections"]
     results.append({
