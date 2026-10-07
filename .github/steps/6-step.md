@@ -158,7 +158,7 @@ Para cada achado, o caminho tem três passos:
 
 ### ⌨️ Atividade: Enviar
 
-1. Pode fazer quantos commits quiser, desde que tudo vá num **único push**: a Tarefa A, a Tarefa B e o ajuste no harness.
+1. Envie a Tarefa A, a Tarefa B e o ajuste no harness. Pode fazer quantos commits e pushes quiser: a cada push eu confiro tudo o que você fez desde o início do passo.
 
    ```bash
    git add .
@@ -168,7 +168,7 @@ Para cada achado, o caminho tem três passos:
 
 1. A verificação confere quatro coisas:
    - houve mudança no código do projeto;
-   - `test-tools.js` e `package-lock.json` foram alterados neste push;
+   - `test-tools.js` e `package-lock.json` foram alterados neste passo;
    - o `npm audit` não encontra vulnerabilidade alta ou crítica que já tenha correção disponível;
    - um documento do harness que já estava instalado foi ajustado.
 

@@ -37,11 +37,17 @@ A pergunta que separa as duas é **o que faz a rule carregar**. Se é "sempre qu
 
 ### ⌨️ Atividade: Aprovar ao menos uma rule
 
-1. Continue a instalação, na mesma sessão ou numa nova. Numa sessão nova, abra o agente na pasta-mãe e envie a primeira linha do gatilho do Passo 2.
+1. Continue a instalação, na mesma sessão ou numa nova. Se quiser começar uma sessão nova, abra o agente na pasta-mãe e envie o gatilho abaixo:
+
+   ```text
+   Leia `{{ package_dir }}/harness/skills/air-harness-setup/SKILL.md` e instale o harness no projeto `{{ code_dir }}`.
+   ```
 
 1. Para cada candidata, leia a proposta e decida se quer o rascunho. Recusar já na proposta também é decisão, e fica registrada com o motivo.
 
-1. Nas rules que quiser, leia o rascunho, confira o escopo e o nome, peça ajustes e aprove. Escolha **pelo menos uma**.
+   > ❕ **Importante:** as respostas do agente nem sempre são determinísticas. A conversa pode ter alguns passos a mais do que os descritos aqui, como uma pergunta ou uma confirmação extra: responda e siga normalmente.
+
+1. Nas rules que quiser, leia o rascunho, confira o escopo e o nome, peça ajustes e aprove. Nem sempre o agente mostra o rascunho na tela, principalmente no CLI: os arquivos estão em `{{ package_dir }}/runs/{{ code_dir }}/draft/`. Escolha **pelo menos uma**.
 
 1. Quando a skill passar para a espinha revisada e a verificação, avise que vai parar por aqui: o fechamento fica para o Passo 5. Confira que o andamento ficou registrado em `{{ package_dir }}/runs/{{ code_dir }}/STATE.md`.
 
