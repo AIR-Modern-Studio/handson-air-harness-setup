@@ -22,7 +22,11 @@ A espinha está gravada. Agora a skill passa pelos outros documentos do harness,
 
 ### ⌨️ Atividade: Decidir os documentos
 
-1. Continue a instalação. Pode ser na mesma sessão do Passo 2 ou numa nova; uma sessão nova começa com o contexto limpo, o que ajuda se a conversa já ficou longa. Numa sessão nova, abra o agente na pasta-mãe e envie a primeira linha do gatilho do Passo 2: a skill lê o registro em `{{ package_dir }}/runs/{{ code_dir }}/` e retoma de onde parou.
+1. Continue a instalação. Pode ser na mesma sessão do Passo 2 ou numa nova; uma sessão nova começa com o contexto limpo, o que ajuda se a conversa já ficou longa. Se quiser começar uma sessão nova, abra o agente na pasta-mãe e envie o gatilho abaixo: a skill lê o registro em `{{ package_dir }}/runs/{{ code_dir }}/` e retoma de onde parou.
+
+   ```text
+   Leia `{{ package_dir }}/harness/skills/air-harness-setup/SKILL.md` e instale o harness no projeto `{{ code_dir }}`.
+   ```
 
 1. Para cada documento que a skill apresentar, leia o resumo e as perguntas em aberto, abra o rascunho no editor e decida: aprove, peça ajustes ou dispense. Nem sempre o agente mostra o rascunho na tela, principalmente no CLI: os arquivos estão em `{{ package_dir }}/runs/{{ code_dir }}/draft/`.
 

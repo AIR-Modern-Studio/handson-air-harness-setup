@@ -27,7 +27,11 @@ No fim, a skill mostra o que foi escrito, onde ficou e como chega ao agente; o q
 
 ### ⌨️ Atividade: Concluir a instalação
 
-1. Continue a instalação, na mesma sessão ou numa nova. Numa sessão nova, abra o agente na pasta-mãe e envie a primeira linha do gatilho do Passo 2.
+1. Continue a instalação, na mesma sessão ou numa nova. Se quiser começar uma sessão nova, abra o agente na pasta-mãe e envie o gatilho abaixo:
+
+   ```text
+   Leia `{{ package_dir }}/harness/skills/air-harness-setup/SKILL.md` e instale o harness no projeto `{{ code_dir }}`.
+   ```
 
 1. Se a skill apresentar o `AGENTS.md` revisado, leia e valide. Nem sempre o agente mostra o rascunho na tela, principalmente no CLI: o arquivo está em `{{ package_dir }}/runs/{{ code_dir }}/draft/`.
 

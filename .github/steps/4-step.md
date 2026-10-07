@@ -37,7 +37,11 @@ A pergunta que separa as duas é **o que faz a rule carregar**. Se é "sempre qu
 
 ### ⌨️ Atividade: Aprovar ao menos uma rule
 
-1. Continue a instalação, na mesma sessão ou numa nova. Numa sessão nova, abra o agente na pasta-mãe e envie a primeira linha do gatilho do Passo 2.
+1. Continue a instalação, na mesma sessão ou numa nova. Se quiser começar uma sessão nova, abra o agente na pasta-mãe e envie o gatilho abaixo:
+
+   ```text
+   Leia `{{ package_dir }}/harness/skills/air-harness-setup/SKILL.md` e instale o harness no projeto `{{ code_dir }}`.
+   ```
 
 1. Para cada candidata, leia a proposta e decida se quer o rascunho. Recusar já na proposta também é decisão, e fica registrada com o motivo.
 
